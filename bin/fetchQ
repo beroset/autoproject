@@ -1,0 +1,52 @@
+#!/usr/bin/env python
+""" Code Review question fetcher.  Given the number of the question, uses
+the StackExchange API version 2.2 to fetch the markdown of the question and
+write it to a local file with the name given as the second argument. """
+import sys
+import urllib
+import StringIO
+import gzip
+import json
+import HTMLParser
+
+def make_URL(qnumber):
+    return 'https://api.stackexchange.com/2.2/questions/'+str(qnumber)+'/?order=desc&sort=activity&site=codereview&filter=!)5IYc5cM9scVj-ftqnOnMD(3TmXe'
+
+def fetch_compressed_data(url):
+    compressed = urllib.urlopen(url).read()
+    stream = StringIO.StringIO(compressed)
+    return gzip.GzipFile(fileobj=stream).read()
+
+def fetch_question_markdown(qnumber):        
+    url = make_URL(qnumber)
+    try: 
+        data = fetch_compressed_data(url)
+    except IOError as (err):
+        print "Error: {0}: while fetching data from {1}".format(err, url)
+        sys.exit(1)
+    try:
+        m = json.loads(data)
+    except ValueError as (err):
+        print "Error: {0}".format(err)
+        sys.exit(1)
+    try:
+        body = m['items'][0]['body_markdown']
+    except KeyError:
+        print "Error: item list was empty; bad question number?"
+        sys.exit(1)
+    except IndexError:
+        print "Error: response does not contain markdown; bad question number?"
+        sys.exit(1)
+    h = HTMLParser.HTMLParser()
+    return h.unescape(body)
+
+if __name__ == '__main__':
+    if len(sys.argv) != 3:
+        print('Usage: fetchQ questionnumber mdfilename')
+        sys.exit(1)
+    qnumber, qname = sys.argv[1:3]
+    
+    md = fetch_question_markdown(qnumber)
+    with open(qname, 'wb') as f:
+        f.write(md.encode('utf-8').replace('\r\n','\n'))
+    
