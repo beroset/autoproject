@@ -2,28 +2,31 @@
 Reviewing code on [CodeReview](http://codereview.stackexchange.com) doesn't necessarily require actually *building* it, but it's often helpful to do so in order to evaluate fully.  I usually create a `CMake` project and build from there and this project was how I automated part of the process.  
 
 ## How to use it
-Specifically, here's how to use this code.  If you have a markdown file (`.md` file) that contains the full source code for a C++ project (let's say it's uncreatively named `project.md` for this example), then you can simply run this code using the command line: `autoproject project.md`
+Here's how to use this code.  First fetch or create a markdown file (`.md` file) that contains the full source code for a C++ project.  To fetch one from [CodeReview](http://codereview.stackexchange.com), you may use `bin/fetchQ` which is a Python program designed for this purpose.  As an example, let's use http://codereview.stackexchange.com/questions/93775/compile-time-sieve-of-eratosthenes 
 
-This will automatically parse the `project.md` file and extract the files it finds to a directory tree like this.
+To fetch the `.md` file for that question, we need to note the number (93775 in this case) and choose a name (let's say `sieve.md`).  Then use the command `fetchQ 93775 sieve.md`.  This fetches the `.md` file from the CodeReview site and puts it in the current directory.   
+
+Now that we have an `.md` file, (named `sieve.md` for this example), we can simply run this code using the command line: `autoproject sieve.md`
+
+This will automatically parse the `sieve.md` file and extract the files it finds to a directory tree like this.
 
 <!-- language: lang-none -->
 
-    project
+    sieve
     ├── build                   (empty subdirectory)
     ├── CMakeLists.txt          (generated)
     └── src
         ├── CMakeLists.txt      (generated)
-        ├── project.cpp         (extracted)
-        ├── test.cpp            (extracted)
-        └── project.h           (extracted)
-
+        ├── primeconst.cpp      (extracted)
+        ├── primeconst.h        (extracted)
+        └── primeconsttest.cpp  (extracted)
 
 For much code in many questions, all that is then required is to navigate to the `build` directory and then type:
 
     cmake ..
     make 
 
-The executable (if successfully created) will be created in `build/src` and will be named `project` (or whatever more meaningful name you have given the original `.md` file).  Examples of questions for which this works are http://codereview.stackexchange.com/questions/123489/recursive-breadth-first-search-for-knights-tour and http://codereview.stackexchange.com/questions/78362/hangman-on-the-command-line.
+The executable (if successfully created) will be created in `build/src` and will be named `sieve` (or whatever more meaningful name you have given the original `.md` file).  Examples of questions for which this works are http://codereview.stackexchange.com/questions/123489/recursive-breadth-first-search-for-knights-tour and http://codereview.stackexchange.com/questions/78362/hangman-on-the-command-line.
 
 Note that this will **not work** if there are special things needed by the code in question.  For instance, this code itself will **not** build unless this line is added to the `src/CMakeLists.txt` file (assuming `g++`):
 
