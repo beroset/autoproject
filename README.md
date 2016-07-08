@@ -36,7 +36,7 @@ The reason is that it uses the C++17 `filesystem` feature which is still in the 
 
 ## How to build
 
-On most Linux machines with CMake installe, building will look something like this:
+On most Linux machines with CMake installed, building will look something like this:
 
     export CXXFLAGS="-Wall -Wextra -pedantic -std=c++14"
     mkdir build
