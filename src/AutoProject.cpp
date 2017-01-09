@@ -4,6 +4,7 @@
 #include <iostream>
 
 const std::string AutoProject::mdextension{".md"};  
+const std::string cmakeVersion{"VERSION 3.0"};
 
 void AutoProject::open(fs::path mdFilename)  {
     AutoProject ap(mdFilename);
@@ -22,13 +23,6 @@ AutoProject::AutoProject(fs::path mdFilename) :
     if (!in) {
         throw std::runtime_error(std::string("Cannot open input file ") + mdfile.c_str());
     }
-    if (fs::exists(srcdir)) {
-        throw std::runtime_error(projname + " already exists: will not overwrite.");
-    }
-    if (!fs::create_directories(srcdir)) {
-        throw std::runtime_error(std::string("Cannot create directory ") + srcdir);
-    }
-    fs::create_directories(projname + "/build/");
 }
 
 /// returns true if passed file extension is an identified source code extension.
@@ -44,7 +38,8 @@ void AutoProject::copyFile() const {
 
 bool AutoProject::createProject() {
     std::string prevline;
-    bool infile = false;
+    bool infile{false};
+    bool firstFile{true};
     std::ofstream srcfile;
     fs::path srcfilename;
     for (std::string line; getline(in, line); ) {
@@ -62,6 +57,10 @@ bool AutoProject::createProject() {
             if (isIndented(line)) {
                 // if previous line was filename, open that file and start writing
                 if (isSourceFilename(prevline)) {
+                    if (firstFile) {
+                        makeTree();
+                        firstFile = false;
+                    }
                     srcfilename = fs::path(srcdir + prevline);
                     srcfile.open(srcfilename);
                     if (srcfile) {
@@ -76,10 +75,22 @@ bool AutoProject::createProject() {
         }
     }        
     in.close();
-    writeSrcLevel();
-    writeTopLevel();
-    copyFile();
+    if (!srcnames.empty()) {
+        writeSrcLevel();
+        writeTopLevel();
+        copyFile();
+    }
     return !srcnames.empty();
+}
+
+void AutoProject::makeTree() {
+    if (fs::exists(srcdir)) {
+        throw std::runtime_error(projname + " already exists: will not overwrite.");
+    }
+    if (!fs::create_directories(srcdir)) {
+        throw std::runtime_error(std::string("Cannot create directory ") + srcdir);
+    }
+    fs::create_directories(projname + "/build/");
 }
 
 std::string& AutoProject::trim(std::string& str, char ch) {
@@ -121,10 +132,11 @@ std::string AutoProject::trimExtras(std::string& line) const
 }
 
 void AutoProject::writeSrcLevel() const {
+    // TODO: add rules to augment CMake file for things like SFML
     // write CMakeLists.txt with filenames to projname/src
     std::ofstream srccmake(srcdir + "CMakeLists.txt");
     srccmake <<
-            "cmake_minimum_required(VERSION 2.8)\n"
+            "cmake_minimum_required(" << cmakeVersion << ")\n"
             "set(EXECUTABLE_NAME \"" << projname << "\")\n"
             "add_executable(${EXECUTABLE_NAME}";
     for (const auto& fn : srcnames) {
@@ -135,10 +147,11 @@ void AutoProject::writeSrcLevel() const {
 }
 
 void AutoProject::writeTopLevel() const {
+    // TODO: use replaceable boilerplate in a config file
     // write CMakeLists.txt top level to projname
     std::ofstream topcmake(projname + "/CMakeLists.txt");
     topcmake << 
-            "cmake_minimum_required(VERSION 2.8)\n"
+            "cmake_minimum_required(" << cmakeVersion << ")\n"
             "project(" << projname << ")\n"
             "add_subdirectory(src)\n";
 }

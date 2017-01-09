@@ -31,6 +31,7 @@ public:
 
     static const std::string mdextension;  
 private:
+    void makeTree();
     bool isIndented(const std::string& line) const;
     void emit(std::ostream& out, const std::string &line) const;
     std::string trimExtras(std::string& line) const;

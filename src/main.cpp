@@ -15,10 +15,16 @@ int main(int argc, char *argv[])
         std::cerr << "Error: " << e.what() << '\n';
         return 1;
     }
-    if (ap.createProject()) {
-        std::cout << "Successfully extracted the following source files:\n";
-        for (const auto& file : ap.filenames()) {
-            std::cout << file << '\n';
+    try {
+        if (ap.createProject()) {
+            std::cout << "Successfully extracted the following source files:\n";
+            for (const auto& file : ap.filenames()) {
+                std::cout << file << '\n';
+            }
         }
+    }
+    catch(std::exception& e) {
+        std::cerr << "Error: " << e.what() << '\n';
+        return 1;
     }
 }
