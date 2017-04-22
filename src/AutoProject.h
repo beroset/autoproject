@@ -47,7 +47,8 @@ public:
 private:
     void makeTree();
     void checkRules(const std::string &line);
-    bool isIndented(const std::string& line) const;
+    bool isNonEmptyIndented(const std::string& line) const;
+    bool isIndentedOrEmpty(const std::string& line) const;
     void emit(std::ostream& out, const std::string &line) const;
     std::string trimExtras(std::string& line) const;
     bool isSourceFilename(std::string& line) const;

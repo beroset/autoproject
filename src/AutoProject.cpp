@@ -47,7 +47,7 @@ bool AutoProject::createProject() {
         // scan through looking for lines indented with indentLevel spaces
         if (infile) {
             // stop writing if non-indented line or EOF
-            if (!line.empty() && !isspace(line[0])) {
+            if (!isIndentedOrEmpty(line)) {
                 std::swap(prevline, line);
                 srcfile.close();
                 infile = false;
@@ -56,7 +56,7 @@ bool AutoProject::createProject() {
                 emit(srcfile, line);
             }
         } else {
-            if (isIndented(line)) {
+            if (isNonEmptyIndented(line)) {
                 // if previous line was filename, open that file and start writing
                 if (isSourceFilename(prevline)) {
                     if (firstFile) {
@@ -205,12 +205,14 @@ void AutoProject::checkRules(const std::string &line) {
     }
 }
 
-bool AutoProject::isIndented(const std::string& line) const {
+bool AutoProject::isNonEmptyIndented(const std::string& line) const {
     size_t indent = line.find_first_not_of(' ');
-    if (indent >= indentLevel && indent != std::string::npos) {
-        return true;
-    }
-    return !(indent == 0);
+    return indent >= indentLevel && indent != std::string::npos;
+}
+
+bool AutoProject::isIndentedOrEmpty(const std::string& line) const {
+    size_t indent = line.find_first_not_of(' ');
+    return indent >= indentLevel;
 }
 
 void AutoProject::emit(std::ostream& out, const std::string &line) const {
