@@ -2,6 +2,7 @@
 #include <unordered_set>
 #include <algorithm>
 #include <iostream>
+#include <regex>
 
 const std::string AutoProject::mdextension{".md"};  
 const std::string cmakeVersion{"VERSION 3.0"};
@@ -47,10 +48,11 @@ bool AutoProject::createProject() {
         if (infile) {
             // stop writing if non-indented line or EOF
             if (!line.empty() && !isspace(line[0])) {
-                prevline = line;
+                std::swap(prevline, line);
                 srcfile.close();
                 infile = false;
             } else {
+                checkRules(line);
                 emit(srcfile, line);
             }
         } else {
@@ -64,8 +66,9 @@ bool AutoProject::createProject() {
                     srcfilename = fs::path(srcdir + prevline);
                     srcfile.open(srcfilename);
                     if (srcfile) {
+                        checkRules(line);
                         emit(srcfile, line);
-                        srcnames.push_back(srcfilename.filename());
+                        srcnames.emplace(srcfilename.filename());
                         infile = true;
                     }
                 } else if (firstFile && !line.empty()) {  // un-named source file
@@ -74,8 +77,9 @@ bool AutoProject::createProject() {
                     srcfilename = fs::path(srcdir + "main.cpp");
                     srcfile.open(srcfilename);
                     if (srcfile) {
+                        checkRules(line);
                         emit(srcfile, line);
-                        srcnames.push_back(srcfilename.filename());
+                        srcnames.emplace(srcfilename.filename());
                         infile = true;
                     }
                 }
@@ -153,6 +157,9 @@ void AutoProject::writeSrcLevel() const {
         srccmake << ' ' << fn;
     }
     srccmake << ")\n";
+    for (const auto rule : extraRules) {
+        srccmake << rule << '\n';
+    }
     srccmake.close();
 }
 
@@ -164,6 +171,38 @@ void AutoProject::writeTopLevel() const {
             "cmake_minimum_required(" << cmakeVersion << ")\n"
             "project(" << projname << ")\n"
             "add_subdirectory(src)\n";
+}
+
+void AutoProject::checkRules(const std::string &line) {
+    static const struct Rule { 
+        const std::regex re;
+        const std::string cmake;
+        Rule(std::string reg, std::string result) : re{reg}, cmake{result} {}
+    } rules[]{
+        { R"(\s*#include\s*<experimental/filesystem>)", R"(target_link_libraries(${EXECUTABLE_NAME} stdc++fs))" },
+        { R"(\s*#include\s*<thread>)", "find_package(Threads REQUIRED)\n"
+                "target_link_libraries(${EXECUTABLE_NAME} ${CMAKE_THREAD_LIBS_INIT})"},
+        { R"(\s*#include\s*<SFML/Graphics.hpp>)", 
+                    "find_package(SFML REQUIRED COMPONENTS System Window Graphics)\n"
+                    "if(SFML_FOUND)\n"
+                    "  include_directories(${SFML_INCLUDE_DIR})\n"
+                    "  target_link_libraries(${EXECUTABLE_NAME} ${SFML_LIBRARIES})\n"
+                    "endif()" },
+        { R"(\s*#include\s*<GL/glew.h>)", 
+                    "find_package(GLEW REQUIRED)\ntarget_link_libraries(${EXECUTABLE_NAME} ${GLEW_LIBRARIES})" },
+        { R"(\s*#include\s*<OpenGL/gl.h>)", 
+                    "find_package(OpenGL REQUIRED)\ntarget_link_libraries(${EXECUTABLE_NAME} ${OPENGL_LIBRARIES})" },
+        { R"(\s*#include\s*<GLFW/glfw3.h>)", 
+                    "find_package(glfw3 REQUIRED)\ntarget_link_libraries(${EXECUTABLE_NAME} glfw)" },
+        { R"(\s*#include\s*<png.h>)", 
+                    "find_package(PNG REQUIRED)\ntarget_link_libraries(${EXECUTABLE_NAME} ${PNG_LIBRARIES})" },
+    };
+    std::smatch sm;
+    for (const auto &rule : rules) {
+        if (std::regex_search(line, sm, rule.re)) {
+            extraRules.emplace(rule.cmake);
+        }
+    }
 }
 
 bool AutoProject::isIndented(const std::string& line) const {

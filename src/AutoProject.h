@@ -2,11 +2,25 @@
 #define AUTOPROJECT_H
 #include <string>
 #include <fstream>
-#include <vector>
+#include <unordered_set>
 #include <exception>
+#include <functional>
+
+// when we get C++17, we can use that include and namespace and 
+// can eliminate the hash function.
 #include <experimental/filesystem>
+
 namespace fs = std::experimental::filesystem;
  
+namespace std {
+    template <>
+    struct hash<fs::path> {
+        std::size_t operator()(const fs::path &path) const {
+            return std::hash<std::string>()(path.c_str());
+        }
+    };
+}
+
 class FileExtensionException : public std::runtime_error
 {
 public:
@@ -25,13 +39,14 @@ public:
     void writeTopLevel() const;
     void writeSrcLevel() const;
     void copyFile() const;
-    const std::vector<fs::path>&filenames() const {
+    const std::unordered_set<fs::path>&filenames() const {
         return srcnames;
     }
 
     static const std::string mdextension;  
 private:
     void makeTree();
+    void checkRules(const std::string &line);
     bool isIndented(const std::string& line) const;
     void emit(std::ostream& out, const std::string &line) const;
     std::string trimExtras(std::string& line) const;
@@ -44,6 +59,7 @@ private:
     std::string projname;
     std::string srcdir;
     std::ifstream in;
-    std::vector<fs::path> srcnames;
+    std::unordered_set<fs::path> srcnames;
+    std::unordered_set<std::string> extraRules;
 };
 #endif // AUTOPROJECT_H
