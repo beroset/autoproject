@@ -28,11 +28,13 @@ For much code in many questions, all that is then required is to navigate to the
 
 The executable (if successfully created) will be created in `build/src` and will be named `sieve` (or whatever more meaningful name you have given the original `.md` file).  Examples of questions for which this works are http://codereview.stackexchange.com/questions/123489/recursive-breadth-first-search-for-knights-tour and http://codereview.stackexchange.com/questions/78362/hangman-on-the-command-line.
 
-Note that this will **not work** if there are special things needed by the code in question.  For instance, this code itself will **not** build unless this line is added to the `src/CMakeLists.txt` file (assuming `g++`):
+Note that this may not work if there are special things needed by the code in question that are unknown to the software.  For instance, this code itself will build because there is a built-in rules that looks for the `#include <experimental/filesystem>` and, if found, adds the following line to the resulting CMake file:
 
     target_link_libraries(${EXECUTABLE_NAME} stdc++fs)
 
-The reason is that it uses the C++17 `filesystem` feature which is still in the `experimental` namespace and so must, for now [must be linked with `libstdc++fs`](https://gcc.gnu.org/onlinedocs/libstdc++/manual/using.html#manual.intro.using.flags).  Note also, that `CMake` will automatically use the environment variables `CFLAGS` and `CXXFLAGS`.  My setup, which works well for many programs including this one includes `CXXFLAGS="-Wall -Wextra -pedantic -std=c++14"`.  The important part here is that this particular program should be compiled with C++14 compatibility.  I have not yet tried this code on platforms other than Linux.
+Other software packages (e.g. Boost) do not currently have built-in rules.
+
+Note also, that `CMake` will automatically use the environment variables `CFLAGS` and `CXXFLAGS`.  My setup, which works well for many programs including this one includes `CXXFLAGS="-Wall -Wextra -pedantic -std=c++14"`.  The important part here is that this particular program should be compiled with C++14 compatibility.  I have not yet tried this code on platforms other than Linux.
 
 ## How to build
 
