@@ -68,9 +68,19 @@ bool AutoProject::createProject() {
                         srcnames.push_back(srcfilename.filename());
                         infile = true;
                     }
+                } else if (firstFile && !line.empty()) {  // un-named source file
+                    makeTree();
+                    firstFile = false;
+                    srcfilename = fs::path(srcdir + "main.cpp");
+                    srcfile.open(srcfilename);
+                    if (srcfile) {
+                        emit(srcfile, line);
+                        srcnames.push_back(srcfilename.filename());
+                        infile = true;
+                    }
                 }
             } else {
-                prevline = line;
+                std::swap(prevline, line);
             }
         }
     }        
