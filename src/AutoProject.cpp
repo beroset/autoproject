@@ -84,7 +84,8 @@ bool AutoProject::createProject() {
                     }
                 }
             } else {
-                std::swap(prevline, line);
+                if (!line.empty())
+                    std::swap(prevline, line);
             }
         }
     }        
