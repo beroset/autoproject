@@ -8,6 +8,7 @@ import StringIO
 import gzip
 import json
 import HTMLParser
+from subprocess import call
 
 def make_URL(qnumber):
     return 'https://api.stackexchange.com/2.2/questions/'+str(qnumber)+'/?order=desc&sort=activity&site=codereview&filter=!)5IYc5cM9scVj-ftqnOnMD(3TmXe'
@@ -49,4 +50,5 @@ if __name__ == '__main__':
     md = fetch_question_markdown(qnumber)
     with open(qname, 'wb') as f:
         f.write(md.encode('utf-8').replace('\r\n','\n'))
+    call("autoproject", qname);
     
