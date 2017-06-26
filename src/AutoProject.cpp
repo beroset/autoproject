@@ -183,6 +183,8 @@ void AutoProject::checkRules(const std::string &line) {
         { R"(\s*#include\s*<experimental/filesystem>)", R"(target_link_libraries(${EXECUTABLE_NAME} stdc++fs))" },
         { R"(\s*#include\s*<thread>)", "find_package(Threads REQUIRED)\n"
                 "target_link_libraries(${EXECUTABLE_NAME} ${CMAKE_THREAD_LIBS_INIT})"},
+        { R"(\s*#include\s*<future>)", "find_package(Threads REQUIRED)\n"
+                "target_link_libraries(${EXECUTABLE_NAME} ${CMAKE_THREAD_LIBS_INIT})"},
         { R"(\s*#include\s*<SFML/Graphics.hpp>)", 
                     "find_package(SFML REQUIRED COMPONENTS System Window Graphics)\n"
                     "if(SFML_FOUND)\n"
@@ -192,13 +194,16 @@ void AutoProject::checkRules(const std::string &line) {
         { R"(\s*#include\s*<GL/glew.h>)", 
                     "find_package(GLEW REQUIRED)\ntarget_link_libraries(${EXECUTABLE_NAME} ${GLEW_LIBRARIES})" },
         { R"(\s*#include\s*<GL/glut.h>)", 
-        // this convoluted CMake thing is to workaround a bug in FindGLUT
-        // see https://cmake.org/Bug/bug_relationship_graph.php?bug_id=14060&graph=dependency
                     R"(find_package(GLUT REQUIRED)
 find_package(OpenGL REQUIRED)
 target_link_libraries(${EXECUTABLE_NAME} ${OPENGL_LIBRARIES} ${GLUT_LIBRARIES}))" },
         { R"(\s*#include\s*<OpenGL/gl.h>)", 
                     "find_package(OpenGL REQUIRED)\ntarget_link_libraries(${EXECUTABLE_NAME} ${OPENGL_LIBRARIES})" },
+        { R"(\s*#include\s*<SDL2/SDL.h>)", 
+                    "find_package(SDL2 REQUIRED)\ntarget_link_libraries(${EXECUTABLE_NAME} ${SDL2_LIBRARIES})" },
+        // the SDL2_tff.cmake package doesn't yet ship with CMake
+        { R"(\s*#include\s*<SDL2/SDL_ttf.h>)", 
+                    "find_package(SDL2_ttf REQUIRED)\ntarget_link_libraries(${EXECUTABLE_NAME} ${SDL2_TTF_LIBRARIES})" },
         { R"(\s*#include\s*<GLFW/glfw3.h>)", 
                     "find_package(glfw3 REQUIRED)\ntarget_link_libraries(${EXECUTABLE_NAME} glfw)" },
         { R"(\s*#include\s*<png.h>)", 
