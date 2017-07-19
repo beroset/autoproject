@@ -192,8 +192,6 @@ void AutoProject::checkRules(const std::string &line) {
         { R"(\s*#include\s*<GL/glew.h>)", 
                     "find_package(GLEW REQUIRED)\ntarget_link_libraries(${EXECUTABLE_NAME} ${GLEW_LIBRARIES})" },
         { R"(\s*#include\s*<GL/glut.h>)", 
-        // this convoluted CMake thing is to workaround a bug in FindGLUT
-        // see https://cmake.org/Bug/bug_relationship_graph.php?bug_id=14060&graph=dependency
                     R"(find_package(GLUT REQUIRED)
 find_package(OpenGL REQUIRED)
 target_link_libraries(${EXECUTABLE_NAME} ${OPENGL_LIBRARIES} ${GLUT_LIBRARIES}))" },
