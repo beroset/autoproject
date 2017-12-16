@@ -50,5 +50,5 @@ if __name__ == '__main__':
     md = fetch_question_markdown(qnumber)
     with open(qname, 'wb') as f:
         f.write(md.encode('utf-8').replace('\r\n','\n'))
-    call("autoproject", qname);
+    call(["autoproject", qname]);
     

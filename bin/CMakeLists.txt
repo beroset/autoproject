@@ -4,4 +4,4 @@ configure_file(
     "${CMAKE_BINARY_DIR}/fetchQ"
     COPYONLY
 )
-#install(TARGETS "${CMAKE_SOURCE_DIR}/bin/fetchQ" RESOURCE DESTINATION bin)
+install(PROGRAMS "fetchQ" DESTINATION bin)
