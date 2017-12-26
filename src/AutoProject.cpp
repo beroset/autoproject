@@ -137,6 +137,7 @@ std::string AutoProject::trimExtras(std::string& line) const
     }
     // remove header markup
     trim(line, '#');
+    rtrim(line, '#');
     // remove bold or italic
     trim(line, '*');
     rtrim(line, '*');
