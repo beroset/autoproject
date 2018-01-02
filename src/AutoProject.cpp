@@ -5,7 +5,7 @@
 #include <regex>
 
 const std::string AutoProject::mdextension{".md"};  
-const std::string cmakeVersion{"VERSION 3.0"};
+const std::string cmakeVersion{"VERSION 3.1"};
 
 void AutoProject::open(fs::path mdFilename)  {
     AutoProject ap(mdFilename);
@@ -84,7 +84,7 @@ bool AutoProject::createProject() {
                     }
                 }
             } else {
-                if (!line.empty())
+                if (!isEmptyOrUnderline(line)) 
                     std::swap(prevline, line);
             }
         }
@@ -141,6 +141,9 @@ std::string AutoProject::trimExtras(std::string& line) const
     // remove bold or italic
     trim(line, '*');
     rtrim(line, '*');
+    // remove quotes
+    trim(line, '"');
+    rtrim(line, '"');
     // remove trailing - or :
     rtrim(line, '-');
     rtrim(line, ':');
@@ -172,6 +175,7 @@ void AutoProject::writeTopLevel() const {
     topcmake << 
             "cmake_minimum_required(" << cmakeVersion << ")\n"
             "project(" << projname << ")\n"
+            "set(CMAKE_CXX_STANDARD 14)\n"
             "add_subdirectory(src)\n";
 }
 
@@ -209,6 +213,20 @@ target_link_libraries(${EXECUTABLE_NAME} ${OPENGL_LIBRARIES} ${GLUT_LIBRARIES}))
                     "find_package(glfw3 REQUIRED)\ntarget_link_libraries(${EXECUTABLE_NAME} glfw)" },
         { R"(\s*#include\s*<png.h>)", 
                     "find_package(PNG REQUIRED)\ntarget_link_libraries(${EXECUTABLE_NAME} ${PNG_LIBRARIES})" },
+        { R"(\s*#include\s*<SDL2.SDL.h>)",
+            R"(include(FindPkgConfig)
+PKG_SEARCH_MODULE(SDL2 REQUIRED sdl2)
+INCLUDE_DIRECTORIES(${SDL2_INCLUDE_DIRS})
+TARGET_LINK_LIBRARIES(${EXECUTABLE_NAME} ${SDL2_LIBRARIES})
+)" },
+        // experimental support for Qt5; not sure if Widgets is correct
+        { R"(\s*#include\s*<QString>)", 
+                    R"(find_package(Qt5Widgets)
+set(CMAKE_AUTOMOC ON)
+set(CMAKE_AUTOUIC ON)
+set(CMAKE_INCLUDE_CURRENT_DIR ON)
+target_link_libraries(${EXECUTABLE_NAME} "Qt5::Widgets")
+)" },
     };
     std::smatch sm;
     for (const auto &rule : rules) {
@@ -226,6 +244,11 @@ bool AutoProject::isNonEmptyIndented(const std::string& line) const {
 bool AutoProject::isIndentedOrEmpty(const std::string& line) const {
     size_t indent = line.find_first_not_of(' ');
     return indent >= indentLevel;
+}
+
+bool AutoProject::isEmptyOrUnderline(const std::string& line) const {
+    size_t indent = line.find_first_not_of('-');
+    return line.empty() || indent == std::string::npos;
 }
 
 void AutoProject::emit(std::ostream& out, const std::string &line) const {
