@@ -17,10 +17,7 @@ int main(int argc, char *argv[])
     }
     try {
         if (ap.createProject()) {
-            std::cout << "Successfully extracted the following source files:\n";
-            for (const auto& file : ap.filenames()) {
-                std::cout << file << '\n';
-            }
+            std::cout << ap;   // print final status
         }
     }
     catch(std::exception& e) {

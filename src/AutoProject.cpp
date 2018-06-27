@@ -1,8 +1,12 @@
 #include "AutoProject.h"
 #include <unordered_set>
+#include <filesystem>
 #include <algorithm>
+#include <string_view>
 #include <iostream>
 #include <regex>
+
+using namespace std::literals;
 
 const std::string AutoProject::mdextension{".md"};  
 const std::string cmakeVersion{"VERSION 3.1"};
@@ -22,13 +26,13 @@ AutoProject::AutoProject(fs::path mdFilename) :
         throw FileExtensionException("Input file must have " + mdextension + " extension");
     }
     if (!in) {
-        throw std::runtime_error(std::string("Cannot open input file ") + mdfile.c_str());
+        throw std::runtime_error("Cannot open input file "s + mdfile.c_str());
     }
 }
 
 /// returns true if passed file extension is an identified source code extension.
 bool isSourceExtension(const std::string &ext) {
-    static const std::unordered_set<std::string> source_extensions{".cpp", ".c", ".h", ".hpp"};
+    static const std::unordered_set<std::string_view> source_extensions{".cpp", ".c", ".h", ".hpp"};
     return source_extensions.find(ext) != source_extensions.end();
 }
 
@@ -99,17 +103,23 @@ bool AutoProject::createProject() {
 }
 
 void AutoProject::makeTree() {
-    if (fs::exists(srcdir)) {
+    if (fs::exists(projname)) {
         throw std::runtime_error(projname + " already exists: will not overwrite.");
     }
-    if (!fs::create_directories(srcdir)) {
-        throw std::runtime_error(std::string("Cannot create directory ") + srcdir);
+    /*
+     * I would have used create_directories here, but there appears to be a bug
+     * in it that didn't exist in the experimental/filesystem version.
+     * Sill tracking that down, but this will do for now.
+     */
+    fs::create_directory(projname);
+    if (!fs::create_directory(srcdir)) {
+        throw std::runtime_error("Cannot create directory "s + srcdir);
     }
     fs::create_directories(projname + "/build/");
 }
 
 std::string& AutoProject::trim(std::string& str, char ch) {
-    auto it = str.begin();
+    auto it{str.begin()};
     for ( ; (*it == ch || isspace(*it)) && it != str.end(); ++it) 
     { }
     if (it != str.end()) {
@@ -151,7 +161,6 @@ std::string AutoProject::trimExtras(std::string& line) const
 }
 
 void AutoProject::writeSrcLevel() const {
-    // TODO: add rules to augment CMake file for things like SFML
     // write CMakeLists.txt with filenames to projname/src
     std::ofstream srccmake(srcdir + "CMakeLists.txt");
     srccmake <<
@@ -162,7 +171,7 @@ void AutoProject::writeSrcLevel() const {
         srccmake << ' ' << fn;
     }
     srccmake << ")\n";
-    for (const auto rule : extraRules) {
+    for (const auto &rule : extraRules) {
         srccmake << rule << '\n';
     }
     srccmake.close();
@@ -180,12 +189,13 @@ void AutoProject::writeTopLevel() const {
 }
 
 void AutoProject::checkRules(const std::string &line) {
+    // TODO: provide mechanism to load rules from file(s)
     static const struct Rule { 
         const std::regex re;
         const std::string cmake;
         Rule(std::string reg, std::string result) : re{reg}, cmake{result} {}
     } rules[]{
-        { R"(\s*#include\s*<experimental/filesystem>)", R"(target_link_libraries(${EXECUTABLE_NAME} stdc++fs))" },
+        { R"(\s*#include\s*<(experimental/)?filesystem>)", R"(target_link_libraries(${EXECUTABLE_NAME} stdc++fs))" },
         { R"(\s*#include\s*<thread>)", "find_package(Threads REQUIRED)\n"
                 "target_link_libraries(${EXECUTABLE_NAME} ${CMAKE_THREAD_LIBS_INIT})"},
         { R"(\s*#include\s*<future>)", "find_package(Threads REQUIRED)\n"
@@ -211,6 +221,8 @@ target_link_libraries(${EXECUTABLE_NAME} ${OPENGL_LIBRARIES} ${GLUT_LIBRARIES}))
                     "find_package(SDL2_ttf REQUIRED)\ntarget_link_libraries(${EXECUTABLE_NAME} ${SDL2_TTF_LIBRARIES})" },
         { R"(\s*#include\s*<GLFW/glfw3.h>)", 
                     "find_package(glfw3 REQUIRED)\ntarget_link_libraries(${EXECUTABLE_NAME} glfw)" },
+        { R"(\s*#include\s*<boost/regex.hpp>)", 
+                    "find_package(Boost REQUIRED COMPONENTS regex)\ntarget_link_libraries(${EXECUTABLE_NAME} ${Boost_LIBRARIES})" },
         { R"(\s*#include\s*<png.h>)", 
                     "find_package(PNG REQUIRED)\ntarget_link_libraries(${EXECUTABLE_NAME} ${PNG_LIBRARIES})" },
         { R"(\s*#include\s*<SDL2.SDL.h>)",
@@ -237,17 +249,17 @@ target_link_libraries(${EXECUTABLE_NAME} "Qt5::Widgets")
 }
 
 bool AutoProject::isNonEmptyIndented(const std::string& line) const {
-    size_t indent = line.find_first_not_of(' ');
+    size_t indent{line.find_first_not_of(' ')};
     return indent >= indentLevel && indent != std::string::npos;
 }
 
 bool AutoProject::isIndentedOrEmpty(const std::string& line) const {
-    size_t indent = line.find_first_not_of(' ');
+    size_t indent{line.find_first_not_of(' ')};
     return indent >= indentLevel;
 }
 
 bool AutoProject::isEmptyOrUnderline(const std::string& line) const {
-    size_t indent = line.find_first_not_of('-');
+    size_t indent{line.find_first_not_of('-')};
     return line.empty() || indent == std::string::npos;
 }
 
@@ -257,4 +269,10 @@ void AutoProject::emit(std::ostream& out, const std::string &line) const {
     } else {
         out << (line[0] == ' ' ? line.substr(indentLevel) : line.substr(1)) << '\n';
     }
+}
+
+std::ostream& operator<<(std::ostream& out, const AutoProject &ap) {
+    out << "Successfully extracted the following source files:\n";
+    std::copy(ap.srcnames.begin(), ap.srcnames.end(), std::ostream_iterator<fs::path>(out, "\n"));
+    return out;
 }

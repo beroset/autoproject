@@ -5,21 +5,19 @@
 #include <unordered_set>
 #include <exception>
 #include <functional>
-
-// when we get C++17, we can use that include and namespace and 
-// can eliminate the hash function.
+#if 1
+#include <filesystem>
+namespace fs = std::filesystem;
+#else
 #include <experimental/filesystem>
-
 namespace fs = std::experimental::filesystem;
- 
-namespace std {
-    template <>
-    struct hash<fs::path> {
-        std::size_t operator()(const fs::path &path) const {
-            return std::hash<std::string>()(path.c_str());
-        }
-    };
-}
+#endif
+
+struct path_hash {
+    std::size_t operator()(const fs::path &path) const {
+        return hash_value(path);
+    }
+};
 
 class FileExtensionException : public std::runtime_error
 {
@@ -39,9 +37,7 @@ public:
     void writeTopLevel() const;
     void writeSrcLevel() const;
     void copyFile() const;
-    const std::unordered_set<fs::path>&filenames() const {
-        return srcnames;
-    }
+    friend std::ostream& operator<<(std::ostream& out, const AutoProject &ap);
 
     static const std::string mdextension;  
 private:
@@ -61,7 +57,7 @@ private:
     std::string projname;
     std::string srcdir;
     std::ifstream in;
-    std::unordered_set<fs::path> srcnames;
+    std::unordered_set<fs::path, path_hash> srcnames;
     std::unordered_set<std::string> extraRules;
 };
 #endif // AUTOPROJECT_H
