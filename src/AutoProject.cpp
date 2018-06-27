@@ -184,7 +184,7 @@ void AutoProject::writeTopLevel() const {
     topcmake << 
             "cmake_minimum_required(" << cmakeVersion << ")\n"
             "project(" << projname << ")\n"
-            "set(CMAKE_CXX_STANDARD 14)\n"
+            "set(CMAKE_CXX_STANDARD 17)\n"
             "add_subdirectory(src)\n";
 }
 

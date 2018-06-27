@@ -32,15 +32,14 @@ Note that this may not work if there are special things needed by the code in qu
 
     target_link_libraries(${EXECUTABLE_NAME} stdc++fs)
 
-Other software packages (e.g. Boost) do not currently have built-in rules.
+Other software packages (e.g. some parts of Boost) do not currently have built-in rules.
 
-Note also, that `CMake` will automatically use the environment variables `CFLAGS` and `CXXFLAGS`.  My setup, which works well for many programs including this one includes `CXXFLAGS="-Wall -Wextra -pedantic -std=c++14"`.  The important part here is that this particular program should be compiled with C++14 compatibility.  I have not yet tried this code on platforms other than Linux.
+Note also, that `CMake` will automatically use the environment variables `CFLAGS` and `CXXFLAGS`.  My setup, which works well for many programs including this one includes `CXXFLAGS="-Wall -Wextra -pedantic"`.  By default, this program generates CMake files that specify C++17. The important part here is that this particular program should be compiled with C++14 compatibility.  I have not yet tried this code on platforms other than Linux.
 
 ## How to build
 
 On most Linux machines with CMake installed, building will look something like this:
 
-    export CXXFLAGS="-Wall -Wextra -pedantic -std=c++14"
     mkdir build
     cd build
     cmake ..
