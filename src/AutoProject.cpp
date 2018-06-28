@@ -16,7 +16,7 @@ void AutoProject::open(fs::path mdFilename)  {
 
 AutoProject::AutoProject(fs::path mdFilename) : 
     mdfile{mdFilename},
-    projname{mdfile.stem()},
+    projname{mdfile.stem().string()},
     srcdir{projname + "/src"},
     in(mdfile)
 {
@@ -24,7 +24,7 @@ AutoProject::AutoProject(fs::path mdFilename) :
         throw FileExtensionException("Input file must have " + mdextension + " extension");
     }
     if (!in) {
-        throw std::runtime_error("Cannot open input file "s + mdfile.c_str());
+        throw std::runtime_error("Cannot open input file "s + mdfile.string());
     }
 }
 
@@ -135,7 +135,7 @@ std::string& AutoProject::rtrim(std::string& str, char ch) {
 
 bool AutoProject::isSourceFilename(std::string& line) const {
     trimExtras(line);
-    return isSourceExtension(fs::path(line).extension());
+    return isSourceExtension(fs::path(line).extension().string());
 }
 
 std::string AutoProject::trimExtras(std::string& line) const
