@@ -1,8 +1,6 @@
 #include "AutoProject.h"
 #include <unordered_set>
-#include <filesystem>
 #include <algorithm>
-#include <string_view>
 #include <iostream>
 #include <regex>
 
@@ -32,7 +30,7 @@ AutoProject::AutoProject(fs::path mdFilename) :
 
 /// returns true if passed file extension is an identified source code extension.
 bool isSourceExtension(const std::string &ext) {
-    static const std::unordered_set<std::string_view> source_extensions{".cpp", ".c", ".h", ".hpp"};
+    static const std::unordered_set<std::string> source_extensions{".cpp", ".c", ".h", ".hpp"};
     return source_extensions.find(ext) != source_extensions.end();
 }
 
@@ -183,7 +181,7 @@ void AutoProject::writeTopLevel() const {
     topcmake << 
             "cmake_minimum_required(" << cmakeVersion << ")\n"
             "project(" << projname << ")\n"
-            "set(CMAKE_CXX_STANDARD 17)\n"
+            "set(CMAKE_CXX_STANDARD 14)\n"
             "add_subdirectory(src)\n";
 }
 
