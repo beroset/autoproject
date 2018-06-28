@@ -46,6 +46,7 @@ bool AutoProject::createProject() {
     std::ofstream srcfile;
     fs::path srcfilename;
     for (std::string line; getline(in, line); ) {
+        replaceLeadingTabs(line);
         // scan through looking for lines indented with indentLevel spaces
         if (infile) {
             // stop writing if non-indented line or EOF
@@ -246,9 +247,6 @@ target_link_libraries(${EXECUTABLE_NAME} "Qt5::Widgets")
 }
 
 bool AutoProject::isNonEmptyIndented(const std::string& line) const {
-    if (line.size() && line[0]=='\t') {
-        return true;
-    }
     size_t indent{line.find_first_not_of(' ')};
     return indent >= indentLevel && indent != std::string::npos;
 }
@@ -261,6 +259,19 @@ bool AutoProject::isIndentedOrEmpty(const std::string& line) const {
 bool AutoProject::isEmptyOrUnderline(const std::string& line) const {
     size_t indent{line.find_first_not_of('-')};
     return line.empty() || indent == std::string::npos;
+}
+
+std::string &AutoProject::replaceLeadingTabs(std::string &line) const {
+    std::size_t tabcount{0};
+    for (auto ch: line) {
+        if (ch != '\t') 
+            break;
+        ++tabcount;
+    }
+    if (tabcount) {
+        line.replace(0, tabcount, indentLevel*tabcount, ' ');
+    }
+    return line;
 }
 
 void AutoProject::emit(std::ostream& out, const std::string &line) const {

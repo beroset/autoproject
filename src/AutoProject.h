@@ -46,6 +46,7 @@ private:
     bool isNonEmptyIndented(const std::string& line) const;
     bool isIndentedOrEmpty(const std::string& line) const;
     bool isEmptyOrUnderline(const std::string& line) const;
+    std::string &replaceLeadingTabs(std::string &line) const;
     void emit(std::ostream& out, const std::string &line) const;
     std::string trimExtras(std::string& line) const;
     bool isSourceFilename(std::string& line) const;
