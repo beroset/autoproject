@@ -246,6 +246,9 @@ target_link_libraries(${EXECUTABLE_NAME} "Qt5::Widgets")
 }
 
 bool AutoProject::isNonEmptyIndented(const std::string& line) const {
+    if (line.size() && line[0]=='\t') {
+        return true;
+    }
     size_t indent{line.find_first_not_of(' ')};
     return indent >= indentLevel && indent != std::string::npos;
 }
