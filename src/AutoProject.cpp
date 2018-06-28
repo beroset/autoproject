@@ -19,7 +19,7 @@ void AutoProject::open(fs::path mdFilename)  {
 AutoProject::AutoProject(fs::path mdFilename) : 
     mdfile{mdFilename},
     projname{mdfile.stem()},
-    srcdir{projname + "/src/"},
+    srcdir{projname + "/src"},
     in(mdfile)
 {
     if (mdfile.extension() != mdextension) {
@@ -38,7 +38,7 @@ bool isSourceExtension(const std::string &ext) {
 
 void AutoProject::copyFile() const {
     // copy md file to projname/src
-    fs::copy_file(mdfile, srcdir + projname + mdextension);
+    fs::copy_file(mdfile, srcdir + "/" + projname + mdextension);
 }
 
 bool AutoProject::createProject() {
@@ -67,7 +67,7 @@ bool AutoProject::createProject() {
                         makeTree();
                         firstFile = false;
                     }
-                    srcfilename = fs::path(srcdir + prevline);
+                    srcfilename = fs::path(srcdir) / prevline;
                     srcfile.open(srcfilename);
                     if (srcfile) {
                         checkRules(line);
@@ -78,7 +78,7 @@ bool AutoProject::createProject() {
                 } else if (firstFile && !line.empty()) {  // un-named source file
                     makeTree();
                     firstFile = false;
-                    srcfilename = fs::path(srcdir + "main.cpp");
+                    srcfilename = fs::path(srcdir) / "main.cpp";
                     srcfile.open(srcfilename);
                     if (srcfile) {
                         checkRules(line);
@@ -111,11 +111,10 @@ void AutoProject::makeTree() {
      * in it that didn't exist in the experimental/filesystem version.
      * Sill tracking that down, but this will do for now.
      */
-    fs::create_directory(projname);
-    if (!fs::create_directory(srcdir)) {
+    if (!fs::create_directories(srcdir)) {
         throw std::runtime_error("Cannot create directory "s + srcdir);
     }
-    fs::create_directories(projname + "/build/");
+    fs::create_directories(projname + "/build");
 }
 
 std::string& AutoProject::trim(std::string& str, char ch) {
@@ -162,7 +161,7 @@ std::string AutoProject::trimExtras(std::string& line) const
 
 void AutoProject::writeSrcLevel() const {
     // write CMakeLists.txt with filenames to projname/src
-    std::ofstream srccmake(srcdir + "CMakeLists.txt");
+    std::ofstream srccmake(srcdir + "/CMakeLists.txt");
     srccmake <<
             "cmake_minimum_required(" << cmakeVersion << ")\n"
             "set(EXECUTABLE_NAME \"" << projname << "\")\n"
