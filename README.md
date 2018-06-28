@@ -34,10 +34,12 @@ Note that this may not work if there are special things needed by the code in qu
 
 Other software packages (e.g. some parts of Boost) do not currently have built-in rules.
 
-Note also, that `CMake` will automatically use the environment variables `CFLAGS` and `CXXFLAGS`.  My setup, which works well for many programs including this one includes `CXXFLAGS="-Wall -Wextra -pedantic"`.  By default, this program generates CMake files that specify C++17. The important part here is that this particular program should be compiled with C++14 compatibility.  I have not yet tried this code on platforms other than Linux.
+Note also, that `CMake` will automatically use the environment variables `CFLAGS` and `CXXFLAGS`.  My setup, which works well for many programs including this one includes `CXXFLAGS="-Wall -Wextra -pedantic"`.  By default, this program generates CMake files that specify C++14 for platforms that recognize the standard compliance level (e.g. `gcc` and `clang` but not `MSVC`). 
+
+So far, this program has been tested and run successfully on Linux and Windows.
 
 ## How to build
-
+### Linux
 On most Linux machines with CMake installed, building will look something like this:
 
     mkdir build
@@ -46,3 +48,14 @@ On most Linux machines with CMake installed, building will look something like t
     make
 
 The executable will then be in the `build/src/` directory and is named `autoproject`.
+
+### Windows
+Under Windows with MSVC++17 or better with CMake installed:
+
+    mkdir winbuild
+    cd winbuild
+    cmake ..
+    msbuild autoproject.sln
+
+The executable will then be in the `winbuild\src\Debug` directory and is named `autoproject`.
+

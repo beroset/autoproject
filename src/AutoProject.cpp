@@ -193,7 +193,11 @@ void AutoProject::checkRules(const std::string &line) {
         const std::string cmake;
         Rule(std::string reg, std::string result) : re{reg}, cmake{result} {}
     } rules[]{
-        { R"(\s*#include\s*<(experimental/)?filesystem>)", R"(target_link_libraries(${EXECUTABLE_NAME} stdc++fs))" },
+        { R"(\s*#include\s*<(experimental/)?filesystem>)", 
+            "if (\"${CMAKE_CXX_COMPILER_ID}\" STREQUAL \"GNU\")\n"
+            "  target_link_libraries(${EXECUTABLE_NAME} stdc++fs)\n"
+            "endif()\n" 
+        },
         { R"(\s*#include\s*<thread>)", "find_package(Threads REQUIRED)\n"
                 "target_link_libraries(${EXECUTABLE_NAME} ${CMAKE_THREAD_LIBS_INIT})"},
         { R"(\s*#include\s*<future>)", "find_package(Threads REQUIRED)\n"
