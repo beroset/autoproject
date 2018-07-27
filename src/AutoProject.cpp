@@ -116,6 +116,22 @@ void AutoProject::makeTree() {
     fs::create_directories(projname + "/build");
 }
 
+std::string& AutoProject::trim(std::string& str, const std::string& pattern) {
+    // TODO: when we get C++20, use std::string::starts_with()
+    if (str.find(pattern) == 0) {
+        str.erase(0, pattern.size());
+    }
+    return str;
+}
+
+std::string& AutoProject::rtrim(std::string& str, const std::string& pattern) {
+    // TODO: when we get C++20, use std::string::ends_with()
+    if (str.rfind(pattern) == str.size() - pattern.size()) {
+        str.erase(str.size() - pattern.size(), pattern.size());
+    }
+    return str;
+}
+
 std::string& AutoProject::trim(std::string& str, char ch) {
     auto it{str.begin()};
     for ( ; (*it == ch || isspace(*it)) && it != str.end(); ++it) 
@@ -149,6 +165,9 @@ std::string AutoProject::trimExtras(std::string& line) const
     // remove bold or italic
     trim(line, '*');
     rtrim(line, '*');
+    // remove html bold
+    trim(line, "<b>");
+    rtrim(line, "</b>");
     // remove quotes
     trim(line, '"');
     rtrim(line, '"');

@@ -51,6 +51,8 @@ private:
     std::string trimExtras(std::string& line) const;
     bool isSourceFilename(std::string& line) const;
 
+    static std::string& trim(std::string& str, const std::string& pattern);
+    static std::string& rtrim(std::string& str, const std::string& pattern);
     static std::string& trim(std::string& str, char ch);
     static std::string& rtrim(std::string& str, char ch);
     static constexpr unsigned indentLevel{4};
