@@ -260,6 +260,8 @@ set(CMAKE_AUTOUIC ON)
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
 target_link_libraries(${EXECUTABLE_NAME} "Qt5::Widgets")
 )" },
+        { R"(\s*#include\s*<openssl/ssl.h>)", 
+                    "find_package(OpenSSL REQUIRED)\ntarget_link_libraries(${EXECUTABLE_NAME} ${OPENSSL_LIBRARIES})" },
     };
     std::smatch sm;
     for (const auto &rule : rules) {
