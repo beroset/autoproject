@@ -126,7 +126,8 @@ std::string& AutoProject::trim(std::string& str, const std::string& pattern) {
 
 std::string& AutoProject::rtrim(std::string& str, const std::string& pattern) {
     // TODO: when we get C++20, use std::string::ends_with()
-    if (str.rfind(pattern) == str.size() - pattern.size()) {
+    auto loc{str.rfind(pattern)};
+    if (loc != std::string::npos && loc == str.size() - pattern.size()) {
         str.erase(str.size() - pattern.size(), pattern.size());
     }
     return str;
