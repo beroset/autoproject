@@ -39,27 +39,63 @@ void AutoProject::copyFile() const {
     fs::copy_file(mdfile, srcdir + "/" + projname + mdextension);
 }
 
+/* 
+ * As of January 2019, according to this post: 
+ * https://meta.stackexchange.com/questions/125148/implement-style-fenced-markdown-code-blocks
+ * an alternative of using either ```c++ or ~~~lang-c++ with a matching end
+ * tag and unindented code is now supported in addition to the original 
+ * indented flavor.  As a result, this code is modified to also accept
+ * that syntax as of April 2019.
+ */
 bool AutoProject::createProject() {
     std::string prevline;
-    bool infile{false};
+    bool inIndentedFile{false};
+    bool inDelimitedFile{false};
     bool firstFile{true};
     std::ofstream srcfile;
     fs::path srcfilename;
+    // TODO: this might be much cleaner with a state machine
     for (std::string line; getline(in, line); ) {
         replaceLeadingTabs(line);
         // scan through looking for lines indented with indentLevel spaces
-        if (infile) {
+        if (inIndentedFile) {
             // stop writing if non-indented line or EOF
             if (!isIndentedOrEmpty(line)) {
                 std::swap(prevline, line);
                 srcfile.close();
-                infile = false;
+                inIndentedFile = false;
             } else {
                 checkRules(line);
                 emit(srcfile, line);
             }
+        } else if (inDelimitedFile) {
+            // stop writing if delimited line 
+            if (isDelimited(line)) {
+                std::swap(prevline, line);
+                srcfile.close();
+                inDelimitedFile = false;
+            } else {
+                checkRules(line);
+                emitVerbatim(srcfile, line);
+            }
         } else {
-            if (isNonEmptyIndented(line)) {
+            if (isDelimited(line)) {
+                // if previous line was filename, open that file and start writing
+                if (isSourceFilename(prevline)) {
+                    srcfilename = fs::path(srcdir) / prevline;
+                } else {
+                    srcfilename = fs::path(srcdir) / "main.cpp";
+                }
+                if (firstFile) {
+                    makeTree();
+                    firstFile = false;
+                }
+                srcfile.open(srcfilename);
+                if (srcfile) {
+                    srcnames.emplace(srcfilename.filename());
+                    inDelimitedFile = true;
+                }
+            } else if (isNonEmptyIndented(line)) {
                 // if previous line was filename, open that file and start writing
                 if (isSourceFilename(prevline)) {
                     if (firstFile) {
@@ -72,7 +108,7 @@ bool AutoProject::createProject() {
                         checkRules(line);
                         emit(srcfile, line);
                         srcnames.emplace(srcfilename.filename());
-                        infile = true;
+                        inIndentedFile = true;
                     }
                 } else if (firstFile && !line.empty()) {  // un-named source file
                     makeTree();
@@ -83,7 +119,7 @@ bool AutoProject::createProject() {
                         checkRules(line);
                         emit(srcfile, line);
                         srcnames.emplace(srcfilename.filename());
-                        infile = true;
+                        inIndentedFile = true;
                     }
                 }
             } else {
@@ -238,7 +274,7 @@ target_link_libraries(${EXECUTABLE_NAME} ${OPENGL_LIBRARIES} ${GLUT_LIBRARIES}))
                     "find_package(OpenGL REQUIRED)\ntarget_link_libraries(${EXECUTABLE_NAME} ${OPENGL_LIBRARIES})" },
         { R"(\s*#include\s*<SDL2/SDL.h>)", 
                     "find_package(SDL2 REQUIRED)\ntarget_link_libraries(${EXECUTABLE_NAME} ${SDL2_LIBRARIES})" },
-        // the SDL2_tff.cmake package doesn't yet ship with CMake
+        // the SDL2_ttf.cmake package doesn't yet ship with CMake
         { R"(\s*#include\s*<SDL2/SDL_ttf.h>)", 
                     "find_package(SDL2_ttf REQUIRED)\ntarget_link_libraries(${EXECUTABLE_NAME} ${SDL2_TTF_LIBRARIES})" },
         { R"(\s*#include\s*<GLFW/glfw3.h>)", 
@@ -289,6 +325,15 @@ bool AutoProject::isEmptyOrUnderline(const std::string& line) const {
     return line.empty() || indent == std::string::npos;
 }
 
+bool AutoProject::isDelimited(const std::string& line) const {
+    if (line.empty() || (line[0] != '`' && line[0] != '~')) {
+        return false;
+    }
+    size_t backtickDelim{line.find_first_not_of('`')};
+    size_t tildeDelim{line.find_first_not_of('~')};
+    return backtickDelim >= delimLength || tildeDelim >= delimLength;
+}
+
 std::string &AutoProject::replaceLeadingTabs(std::string &line) const {
     std::size_t tabcount{0};
     for (auto ch: line) {
@@ -308,6 +353,10 @@ void AutoProject::emit(std::ostream& out, const std::string &line) const {
     } else {
         out << (line[0] == ' ' ? line.substr(indentLevel) : line.substr(1)) << '\n';
     }
+}
+
+void AutoProject::emitVerbatim(std::ostream& out, const std::string &line) const {
+    out << line << '\n';
 }
 
 std::ostream& operator<<(std::ostream& out, const AutoProject &ap) {

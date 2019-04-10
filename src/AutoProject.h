@@ -46,8 +46,10 @@ private:
     bool isNonEmptyIndented(const std::string& line) const;
     bool isIndentedOrEmpty(const std::string& line) const;
     bool isEmptyOrUnderline(const std::string& line) const;
+    bool isDelimited(const std::string& line) const;
     std::string &replaceLeadingTabs(std::string &line) const;
     void emit(std::ostream& out, const std::string &line) const;
+    void emitVerbatim(std::ostream& out, const std::string &line) const;
     std::string trimExtras(std::string& line) const;
     bool isSourceFilename(std::string& line) const;
 
@@ -56,6 +58,7 @@ private:
     static std::string& trim(std::string& str, char ch);
     static std::string& rtrim(std::string& str, char ch);
     static constexpr unsigned indentLevel{4};
+    static constexpr unsigned delimLength{3};
     fs::path mdfile;
     std::string projname;
     std::string srcdir;
