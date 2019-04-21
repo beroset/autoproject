@@ -8,11 +8,22 @@
 using namespace std::literals;
 
 const std::string AutoProject::mdextension{".md"};  
-constexpr std::string_view cmakeVersion{"VERSION 3.1"};
+static constexpr std::string_view cmakeVersion{"VERSION 3.1"};
+static constexpr unsigned indentLevel{4};
+static constexpr unsigned delimLength{3};
+
 static std::string& trim(std::string& str, const std::string_view pattern);
 static std::string& rtrim(std::string& str, const std::string_view pattern);
 static std::string& trim(std::string& str, char ch);
 static std::string& rtrim(std::string& str, char ch);
+static std::string trimExtras(std::string& line);
+static bool isNonEmptyIndented(const std::string& line);
+static bool isIndentedOrEmpty(const std::string& line);
+static bool isEmptyOrUnderline(const std::string& line);
+static bool isDelimited(const std::string& line);
+static std::string &replaceLeadingTabs(std::string &line);
+static void emit(std::ostream& out, const std::string &line);
+static void emitVerbatim(std::ostream& out, const std::string &line);
 
 void AutoProject::open(fs::path mdFilename)  {
     AutoProject ap(mdFilename);
@@ -34,14 +45,9 @@ AutoProject::AutoProject(fs::path mdFilename) :
 }
 
 /// returns true if passed file extension is an identified source code extension.
-bool isSourceExtension(const std::string &ext) {
+bool isSourceExtension(const std::string_view ext) {
     static const std::unordered_set<std::string_view> source_extensions{".cpp", ".c", ".h", ".hpp"};
     return source_extensions.find(ext) != source_extensions.end();
-}
-
-void AutoProject::copyFile() const {
-    // copy md file to projname/src
-    fs::copy_file(mdfile, srcdir + "/" + projname + mdextension);
 }
 
 /* 
@@ -137,7 +143,8 @@ bool AutoProject::createProject() {
     if (!srcnames.empty()) {
         writeSrcLevel();
         writeTopLevel();
-        copyFile();
+        // copy md file to projname/src
+        fs::copy_file(mdfile, srcdir + "/" + projname + mdextension);
     }
     return !srcnames.empty();
 }
@@ -191,13 +198,12 @@ std::string& rtrim(std::string& str, char ch) {
     return str;
 }
 
-bool AutoProject::isSourceFilename(std::string& line) const {
+bool AutoProject::isSourceFilename(std::string &line) const {
     trimExtras(line);
     return isSourceExtension(fs::path(line).extension().string());
 }
 
-std::string AutoProject::trimExtras(std::string& line) const
-{
+std::string trimExtras(std::string& line) {
     if (line.empty()) {
         return line;
     }
@@ -315,22 +321,22 @@ target_link_libraries(${EXECUTABLE_NAME} "Qt5::Widgets")
     }
 }
 
-bool AutoProject::isNonEmptyIndented(const std::string& line) const {
+bool isNonEmptyIndented(const std::string& line) {
     size_t indent{line.find_first_not_of(' ')};
     return indent >= indentLevel && indent != std::string::npos;
 }
 
-bool AutoProject::isIndentedOrEmpty(const std::string& line) const {
+bool isIndentedOrEmpty(const std::string& line) {
     size_t indent{line.find_first_not_of(' ')};
     return indent >= indentLevel;
 }
 
-bool AutoProject::isEmptyOrUnderline(const std::string& line) const {
+bool isEmptyOrUnderline(const std::string& line) {
     size_t indent{line.find_first_not_of('-')};
     return line.empty() || indent == std::string::npos;
 }
 
-bool AutoProject::isDelimited(const std::string& line) const {
+bool isDelimited(const std::string& line) {
     if (line.empty() || (line[0] != '`' && line[0] != '~')) {
         return false;
     }
@@ -339,7 +345,7 @@ bool AutoProject::isDelimited(const std::string& line) const {
     return backtickDelim >= delimLength || tildeDelim >= delimLength;
 }
 
-std::string &AutoProject::replaceLeadingTabs(std::string &line) const {
+std::string &replaceLeadingTabs(std::string &line) {
     std::size_t tabcount{0};
     for (auto ch: line) {
         if (ch != '\t') 
@@ -352,7 +358,7 @@ std::string &AutoProject::replaceLeadingTabs(std::string &line) const {
     return line;
 }
 
-void AutoProject::emit(std::ostream& out, const std::string &line) const {
+static void emit(std::ostream& out, const std::string &line) {
     if (line.size() < indentLevel) {
         out << line << '\n';
     } else {
@@ -360,7 +366,7 @@ void AutoProject::emit(std::ostream& out, const std::string &line) const {
     }
 }
 
-void AutoProject::emitVerbatim(std::ostream& out, const std::string &line) const {
+void emitVerbatim(std::ostream& out, const std::string &line) {
     out << line << '\n';
 }
 
