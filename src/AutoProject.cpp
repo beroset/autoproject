@@ -229,6 +229,7 @@ std::string trimExtras(std::string& line) {
 void AutoProject::writeSrcLevel() const {
     // write CMakeLists.txt with filenames to projname/src
     std::ofstream srccmake(srcdir + "/CMakeLists.txt");
+    // TODO: the add_executable line needs to be *after* "set(CMAKE_AUTOMOC ON)" but before "target_link_libraries..."
     srccmake <<
             "cmake_minimum_required(" << cmakeVersion << ")\n"
             "set(EXECUTABLE_NAME \"" << projname << "\")\n"
@@ -251,7 +252,7 @@ void AutoProject::writeTopLevel() const {
             "cmake_minimum_required(" << cmakeVersion << ")\n"
             "project(" << projname << ")\n"
             "set(CMAKE_CXX_STANDARD 14)\n"
-            "set(CMAKE_CXX_FLAGS \"${CMAKE_CXX_FLAGS} -Wall -pedantic -Wextra\")\n"
+            "set(CMAKE_CXX_FLAGS \"${CMAKE_CXX_FLAGS} -Wall -Wextra -pedantic\")\n"
             "add_subdirectory(src)\n";
 }
 
@@ -310,6 +311,7 @@ TARGET_LINK_LIBRARIES(${EXECUTABLE_NAME} ${SDL2_LIBRARIES})
 set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTOUIC ON)
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
+message(FATAL_ERROR "You must move the 'add_executable' here and delete this line")
 target_link_libraries(${EXECUTABLE_NAME} "Qt5::Widgets")
 )" },
         { R"(\s*#include\s*<openssl/ssl.h>)", 
