@@ -245,6 +245,7 @@ void AutoProject::writeTopLevel() const {
             "cmake_minimum_required(" << cmakeVersion << ")\n"
             "project(" << projname << ")\n"
             "set(CMAKE_CXX_STANDARD 14)\n"
+            "set(CMAKE_CXX_FLAGS \"${CMAKE_CXX_FLAGS} -Wall -Wextra -pedantic\")\n"
             "add_subdirectory(src)\n";
 }
 
