@@ -1,17 +1,13 @@
 #ifndef AUTOPROJECT_H
 #define AUTOPROJECT_H
 #include <string>
+#include <string_view>
 #include <fstream>
 #include <unordered_set>
 #include <exception>
 #include <functional>
-#if 1
 #include <filesystem>
 namespace fs = std::filesystem;
-#else
-#include <experimental/filesystem>
-namespace fs = std::experimental::filesystem;
-#endif
 
 struct path_hash {
     std::size_t operator()(const fs::path &path) const {
@@ -53,10 +49,6 @@ private:
     std::string trimExtras(std::string& line) const;
     bool isSourceFilename(std::string& line) const;
 
-    static std::string& trim(std::string& str, const std::string& pattern);
-    static std::string& rtrim(std::string& str, const std::string& pattern);
-    static std::string& trim(std::string& str, char ch);
-    static std::string& rtrim(std::string& str, char ch);
     static constexpr unsigned indentLevel{4};
     static constexpr unsigned delimLength{3};
     fs::path mdfile;

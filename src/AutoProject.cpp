@@ -3,11 +3,16 @@
 #include <algorithm>
 #include <iostream>
 #include <regex>
+#include <string_view>
 
 using namespace std::literals;
 
 const std::string AutoProject::mdextension{".md"};  
-const std::string cmakeVersion{"VERSION 3.1"};
+constexpr std::string_view cmakeVersion{"VERSION 3.1"};
+static std::string& trim(std::string& str, const std::string_view pattern);
+static std::string& rtrim(std::string& str, const std::string_view pattern);
+static std::string& trim(std::string& str, char ch);
+static std::string& rtrim(std::string& str, char ch);
 
 void AutoProject::open(fs::path mdFilename)  {
     AutoProject ap(mdFilename);
@@ -30,7 +35,7 @@ AutoProject::AutoProject(fs::path mdFilename) :
 
 /// returns true if passed file extension is an identified source code extension.
 bool isSourceExtension(const std::string &ext) {
-    static const std::unordered_set<std::string> source_extensions{".cpp", ".c", ".h", ".hpp"};
+    static const std::unordered_set<std::string_view> source_extensions{".cpp", ".c", ".h", ".hpp"};
     return source_extensions.find(ext) != source_extensions.end();
 }
 
@@ -152,7 +157,7 @@ void AutoProject::makeTree() {
     fs::create_directories(projname + "/build");
 }
 
-std::string& AutoProject::trim(std::string& str, const std::string& pattern) {
+std::string& trim(std::string& str, const std::string_view pattern) {
     // TODO: when we get C++20, use std::string::starts_with()
     if (str.find(pattern) == 0) {
         str.erase(0, pattern.size());
@@ -160,7 +165,7 @@ std::string& AutoProject::trim(std::string& str, const std::string& pattern) {
     return str;
 }
 
-std::string& AutoProject::rtrim(std::string& str, const std::string& pattern) {
+std::string& rtrim(std::string& str, const std::string_view pattern) {
     // TODO: when we get C++20, use std::string::ends_with()
     auto loc{str.rfind(pattern)};
     if (loc != std::string::npos && loc == str.size() - pattern.size()) {
@@ -169,7 +174,7 @@ std::string& AutoProject::rtrim(std::string& str, const std::string& pattern) {
     return str;
 }
 
-std::string& AutoProject::trim(std::string& str, char ch) {
+std::string& trim(std::string& str, char ch) {
     auto it{str.begin()};
     for ( ; (*it == ch || isspace(*it)) && it != str.end(); ++it) 
     { }
@@ -179,7 +184,7 @@ std::string& AutoProject::trim(std::string& str, char ch) {
     return str;
 }
 
-std::string& AutoProject::rtrim(std::string& str, char ch) {
+std::string& rtrim(std::string& str, char ch) {
     std::reverse(str.begin(), str.end());
     trim(str, ch);
     std::reverse(str.begin(), str.end());
