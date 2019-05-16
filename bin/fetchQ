@@ -36,7 +36,7 @@ def fetch_question_markdown(qnumber):
         print("Error: {0}".format(err.msg))
         sys.exit(1)
     try:
-        body = "# https://codereview.stackexchange.com/questions/{0}\n\n".format(qnumber) + m['items'][0]['body_markdown']
+        body = "# [{1}](https://codereview.stackexchange.com/questions/{0})\n\n".format(qnumber, m['items'][0]['title']) + m['items'][0]['body_markdown']
     except KeyError:
         print("Error: item list was empty; bad question number?")
         sys.exit(1)
