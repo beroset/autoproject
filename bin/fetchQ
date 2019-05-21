@@ -3,18 +3,18 @@
 the StackExchange API version 2.2 to fetch the markdown of the question and
 write it to a local file with the name given as the second argument. """
 import sys
-import urllib.request, urllib.parse, urllib.error
+import urllib
 import io
 import gzip
 import json
-import html.parser
+import HTMLParser
 from subprocess import call
 
 def make_URL(qnumber):
     return 'https://api.stackexchange.com/2.2/questions/'+str(qnumber)+'/?order=desc&sort=activity&site=codereview&filter=!)5IYc5cM9scVj-ftqnOnMD(3TmXe'
 
 def fetch_compressed_data(url):
-    compressed = urllib.request.urlopen(url).read()
+    compressed = urllib.urlopen(url).read()
     stream = io.BytesIO(compressed)
     return gzip.GzipFile(fileobj=stream).read()
 
@@ -43,7 +43,7 @@ def fetch_question_markdown(qnumber):
     except IndexError:
         print("Error: response does not contain markdown; bad question number?")
         sys.exit(1)
-    return html.unescape(body)
+    return HTMLParser.HTMLParser().unescape(body)
 
 if __name__ == '__main__':
     if len(sys.argv) != 3:
