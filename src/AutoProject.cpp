@@ -266,10 +266,10 @@ void AutoProject::checkRules(const std::string &line) {
         { R"(\s*#include\s*<future>)", "find_package(Threads REQUIRED)\n"
                 "target_link_libraries(${EXECUTABLE_NAME} ${CMAKE_THREAD_LIBS_INIT})"},
         { R"(\s*#include\s*<SFML/Graphics.hpp>)", 
-                    "find_package(SFML REQUIRED COMPONENTS System Window Graphics)\n"
+                    "find_package(SFML REQUIRED COMPONENTS system window graphics)\n"
                     "if(SFML_FOUND)\n"
                     "  include_directories(${SFML_INCLUDE_DIR})\n"
-                    "  target_link_libraries(${EXECUTABLE_NAME} ${SFML_LIBRARIES})\n"
+                    "  target_link_libraries(${EXECUTABLE_NAME} sfml-graphics)\n"
                     "endif()" },
         { R"(\s*#include\s*<GL/glew.h>)", 
                     "find_package(GLEW REQUIRED)\ntarget_link_libraries(${EXECUTABLE_NAME} ${GLEW_LIBRARIES})" },
