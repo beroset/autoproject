@@ -309,6 +309,8 @@ target_link_libraries(${EXECUTABLE_NAME} "Qt5::Widgets")
 )" },
         { R"(\s*#include\s*<openssl/ssl.h>)", 
                     "find_package(OpenSSL REQUIRED)\ntarget_link_libraries(${EXECUTABLE_NAME} ${OPENSSL_LIBRARIES})" },
+        { R"(\s*#include\s*<boost/filesystem.hpp>)", 
+                    "find_package(Boost REQUIRED COMPONENTS filesystem)\ntarget_link_libraries(${EXECUTABLE_NAME} ${Boost_LIBRARIES})" },
     };
     std::smatch sm;
     for (const auto &rule : rules) {
