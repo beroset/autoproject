@@ -5,8 +5,10 @@ write it to a local file with the name given as the second argument. """
 import sys
 import urllib.request, urllib.parse, urllib.error
 import io
+import os
 import gzip
 import json
+import struct
 import html.parser
 from subprocess import call
 
@@ -43,16 +45,45 @@ def fetch_question_markdown(qnumber):
     except IndexError:
         print("Error: response does not contain markdown; bad question number?")
         sys.exit(1)
-    return html.parser.HTMLParser().unescape(body)
+    return html.unescape(body)
+
+def getMessage():
+    rawLength = sys.stdin.buffer.read(4) 
+    if len(rawLength) == 0:
+        sys.exit(0)
+    messageLength = struct.unpack('@I', rawLength)[0]
+    sendMessage(encodeMessage(f'attempting to read {messageLength} bytes'))
+    message = sys.stdin.buffer.read(messageLength).decode('utf-8')
+    return json.loads(message)
+
+# Encode a message for transmission,
+# given its content.
+def encodeMessage(messageContent):
+    encodedContent = json.dumps(messageContent).encode('utf-8')
+    encodedLength = struct.pack('@I', len(encodedContent))
+    return {'length': encodedLength, 'content': encodedContent}
+
+# Send an encoded message to stdout
+def sendMessage(encodedMessage):
+    sys.stdout.buffer.write(encodedMessage['length'])
+    sys.stdout.buffer.write(encodedMessage['content'])
+    sys.stdout.buffer.flush()
 
 if __name__ == '__main__':
     if len(sys.argv) != 3:
         print('Usage: fetchQ questionnumber mdfilename')
         sys.exit(1)
     qnumber, qname = sys.argv[1:3]
-    
-    md = fetch_question_markdown(qnumber)
-    with open(qname, 'wb') as f:
-        f.write(md.replace('\r\n','\n').encode('utf-8'))
-    call(["autoproject", qname]);
-    
+    # are we being called as a Web Extension?
+    if (qname == 'autoproject@beroset.com'):
+        md = getMessage()
+        basedir = os.getenv('AUTOPROJECT_DIR', '/tmp')
+        qnumber = md['question_id']
+        qname = f'{basedir}/{qnumber}.md'
+        with open(qname, 'wb') as f:
+            f.write(html.unescape(md['body_markdown']).replace('\r\n','\n').encode('utf-8'))
+    else:
+        md = fetch_question_markdown(qnumber)
+        with open(qname, 'wb') as f:
+            f.write(md.replace('\r\n','\n').encode('utf-8'))
+        call(["autoproject", qname]);
