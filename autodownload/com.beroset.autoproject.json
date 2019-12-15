@@ -1,0 +1,7 @@
+{
+  "name": "com.beroset.autoproject",
+  "description": "Automatic project creation from codereview.stackexchange.com",
+  "path": "/replace/this/with/path/to/fetchQ",
+  "type": "stdio",
+  "allowed_extensions": [ "autoproject@beroset.com" ]
+}

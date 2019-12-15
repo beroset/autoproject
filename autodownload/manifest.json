@@ -1,0 +1,30 @@
+{
+  "manifest_version": 2,
+  "name": "AutoProject",
+  "version": "1.0",
+
+  "description": "Automatically downloads a C or C++ project from CodeReview",
+  "homepage_url": "https://gitub.com/beroset/autoproject",
+  "icons": {
+    "48": "icons/lightning-48.png"
+  },
+  "background": {
+      "scripts": ["backend.js"]
+  },
+  "applications": {
+      "gecko": {
+          "id": "autoproject@beroset.com"
+      }
+  },
+  "content_scripts": [
+    { 
+        "matches": ["https://codereview.stackexchange.com/questions/*"],
+        "js": ["autoproject.js"]
+    }
+  ],
+
+  "permissions": [
+    "nativeMessaging"
+  ]
+
+}
