@@ -1,7 +1,7 @@
 {
   "name": "com.beroset.autoproject",
   "description": "Automatic project creation from codereview.stackexchange.com",
-  "path": "/replace/this/with/path/to/fetchQ",
+  "path": "@CMAKE_INSTALL_PREFIX@/bin/fetchQ",
   "type": "stdio",
   "allowed_extensions": [ "autoproject@beroset.com" ]
 }

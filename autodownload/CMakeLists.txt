@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.0)
 configure_file(
-    "${CMAKE_CURRENT_SOURCE_DIR}/com.beroset.autoproject.json"
-    "/usr/lib64/mozilla/native-messaging-hosts/com.beroset.autoproject.json"
-    COPYONLY
+    "com.beroset.autoproject.json"
+    "com.beroset.autoproject.json"
 )
-install(PROGRAMS "com.beroset.autoproject.json" DESTINATION bin)
+install(FILES "${CMAKE_CURRENT_BINARY_DIR}/com.beroset.autoproject.json" 
+    DESTINATION "/usr/lib64/mozilla/native-messaging-hosts/")
