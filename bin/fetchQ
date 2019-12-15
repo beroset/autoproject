@@ -3,7 +3,9 @@
 the StackExchange API version 2.2 to fetch the markdown of the question and
 write it to a local file with the name given as the second argument. """
 import sys
-import urllib.request, urllib.parse, urllib.error
+import urllib.request
+import urllib.parse
+import urllib.error
 import io
 import os
 import gzip
@@ -12,17 +14,23 @@ import struct
 import html.parser
 from subprocess import call
 
+
 def make_URL(qnumber):
-    return 'https://api.stackexchange.com/2.2/questions/'+str(qnumber)+'/?order=desc&sort=activity&site=codereview&filter=!)5IYc5cM9scVj-ftqnOnMD(3TmXe'
+    return 'https://api.stackexchange.com/2.2/questions/' + \
+        str(qnumber) + \
+        '/?order=desc&sort=activity&site=codereview' + \
+        '&filter=!)5IYc5cM9scVj-ftqnOnMD(3TmXe'
+
 
 def fetch_compressed_data(url):
     compressed = urllib.request.urlopen(url).read()
     stream = io.BytesIO(compressed)
     return gzip.GzipFile(fileobj=stream).read()
 
-def fetch_question_markdown(qnumber):        
+
+def fetch_question_markdown(qnumber):
     url = make_URL(qnumber)
-    try: 
+    try:
         data = fetch_compressed_data(url)
     except urllib.error.URLError as err:
         if hasattr(err, 'reason'):
@@ -30,15 +38,16 @@ def fetch_question_markdown(qnumber):
             print(('Reason: ', err.reason))
             sys.exit(1)
         elif hasattr(err, 'code'):
-            print(("Error: {0}: while fetching data from {1}".format(err.code, url)))
+            print(f'Error: {err.code}: while fetching data from {url}')
             sys.exit(1)
     try:
         m = json.loads(data)
     except json.JSONDecodeError as err:
-        print(("Error: {0}".format(err.msg)))
+        print(f'Error: {err.msg}')
         sys.exit(1)
     try:
-        body = "# [{1}](https://codereview.stackexchange.com/questions/{0})\n\n".format(qnumber, m['items'][0]['title']) + m['items'][0]['body_markdown']
+        body = "# [{1}](https://codereview.stackexchange.com/questions/{0})\n\n". \
+            format(qnumber, m['items'][0]['title']) + m['items'][0]['body_markdown']
     except KeyError:
         print("Error: item list was empty; bad question number?")
         sys.exit(1)
@@ -47,14 +56,16 @@ def fetch_question_markdown(qnumber):
         sys.exit(1)
     return html.unescape(body)
 
+
 def getMessage():
-    rawLength = sys.stdin.buffer.read(4) 
+    rawLength = sys.stdin.buffer.read(4)
     if len(rawLength) == 0:
         sys.exit(0)
     messageLength = struct.unpack('@I', rawLength)[0]
     sendMessage(encodeMessage(f'attempting to read {messageLength} bytes'))
     message = sys.stdin.buffer.read(messageLength).decode('utf-8')
     return json.loads(message)
+
 
 # Encode a message for transmission,
 # given its content.
@@ -63,11 +74,13 @@ def encodeMessage(messageContent):
     encodedLength = struct.pack('@I', len(encodedContent))
     return {'length': encodedLength, 'content': encodedContent}
 
+
 # Send an encoded message to stdout
 def sendMessage(encodedMessage):
     sys.stdout.buffer.write(encodedMessage['length'])
     sys.stdout.buffer.write(encodedMessage['content'])
     sys.stdout.buffer.flush()
+
 
 if __name__ == '__main__':
     if len(sys.argv) != 3:
@@ -76,14 +89,15 @@ if __name__ == '__main__':
     qnumber, qname = sys.argv[1:3]
     # are we being called as a Web Extension?
     if (qname == 'autoproject@beroset.com'):
-        md = getMessage()
+        msg = getMessage()
         basedir = os.getenv('AUTOPROJECT_DIR', '/tmp')
-        qnumber = md['question_id']
+        qnumber = msg['question_id']
         qname = f'{basedir}/{qnumber}.md'
+        md = html.unescape(msg['body_markdown']).replace('\r\n', '\n').encode('utf-8')
         with open(qname, 'wb') as f:
-            f.write(html.unescape(md['body_markdown']).replace('\r\n','\n').encode('utf-8'))
+            f.write(md)
     else:
         md = fetch_question_markdown(qnumber)
         with open(qname, 'wb') as f:
-            f.write(md.replace('\r\n','\n').encode('utf-8'))
-        call(["autoproject", qname]);
+            f.write(md.replace('\r\n', '\n').encode('utf-8'))
+        call(["autoproject", qname])
