@@ -45,16 +45,7 @@ def fetch_question_markdown(qnumber):
     except json.JSONDecodeError as err:
         print(f'Error: {err.msg}')
         sys.exit(1)
-    try:
-        body = "# [{1}](https://codereview.stackexchange.com/questions/{0})\n\n". \
-            format(qnumber, m['items'][0]['title']) + m['items'][0]['body_markdown']
-    except KeyError:
-        print("Error: item list was empty; bad question number?")
-        sys.exit(1)
-    except IndexError:
-        print("Error: response does not contain markdown; bad question number?")
-        sys.exit(1)
-    return html.unescape(body)
+    return m['items'][0]
 
 
 def getMessage():
@@ -84,7 +75,7 @@ def sendMessage(encodedMessage):
 
 if __name__ == '__main__':
     if len(sys.argv) != 3:
-        print('Usage: fetchQ questionnumber mdfilename')
+        print(f'Usage: {sys.argv[0]} fetchQ questionnumber mdfilename')
         sys.exit(1)
     qnumber, qname = sys.argv[1:3]
     # are we being called as a Web Extension?
@@ -93,11 +84,13 @@ if __name__ == '__main__':
         basedir = os.getenv('AUTOPROJECT_DIR', '/tmp')
         qnumber = msg['question_id']
         qname = f'{basedir}/{qnumber}.md'
-        md = html.unescape(msg['body_markdown']).replace('\r\n', '\n').encode('utf-8')
-        with open(qname, 'wb') as f:
-            f.write(md)
     else:
-        md = fetch_question_markdown(qnumber)
-        with open(qname, 'wb') as f:
-            f.write(md.replace('\r\n', '\n').encode('utf-8'))
-        call(["autoproject", qname])
+        msg = fetch_question_markdown(qnumber)
+
+    md = html.unescape(msg['body_markdown']).replace('\r\n', '\n').encode('utf-8')
+    title = html.unescape(msg['title']).encode('utf-8')
+    header = b'# [{title}](https://codereview.stackexchange.com/questions/{qnumber})\n\n'
+    with open(qname, 'wb') as f:
+        f.write(header)
+        f.write(md)
+    call(["autoproject", qname])
