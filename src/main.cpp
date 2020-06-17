@@ -1,6 +1,7 @@
 #include <iostream>
 #include <string_view>
 #include "AutoProject.h"
+#include "ConfigFile.h"
 
 constexpr std::string_view license{R"(
 

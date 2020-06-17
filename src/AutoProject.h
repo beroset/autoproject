@@ -20,7 +20,7 @@ class FileExtensionException : public std::runtime_error
 public:
     FileExtensionException(const std::string& msg) :
         std::runtime_error(msg)
-    {} 
+    {}
 };
 
 class AutoProject {
@@ -32,7 +32,7 @@ public:
     bool createProject();
     friend std::ostream& operator<<(std::ostream& out, const AutoProject &ap);
 
-    static const std::string mdextension;  
+    static const std::string mdextension;
 private:
     void writeTopLevel() const;
     void writeSrcLevel() const;
