@@ -7,7 +7,7 @@
 
 using namespace std::literals;
 
-const std::string AutoProject::mdextension{".md"};  
+const std::string AutoProject::mdextension{".md"};
 constexpr std::string_view cmakeVersion{"VERSION 3.1"};
 static std::string& trim(std::string& str, const std::string_view pattern);
 static std::string& rtrim(std::string& str, const std::string_view pattern);
@@ -19,7 +19,7 @@ void AutoProject::open(fs::path mdFilename)  {
     std::swap(ap, *this);
 }
 
-AutoProject::AutoProject(fs::path mdFilename) : 
+AutoProject::AutoProject(fs::path mdFilename) :
     mdfile{mdFilename},
     projname{mdfile.stem().string()},
     srcdir{projname + "/src"},
@@ -44,11 +44,11 @@ void AutoProject::copyFile() const {
     fs::copy_file(mdfile, srcdir + "/" + projname + mdextension);
 }
 
-/* 
- * As of January 2019, according to this post: 
+/*
+ * As of January 2019, according to this post:
  * https://meta.stackexchange.com/questions/125148/implement-style-fenced-markdown-code-blocks
  * an alternative of using either ```c++ or ~~~lang-c++ with a matching end
- * tag and unindented code is now supported in addition to the original 
+ * tag and unindented code is now supported in addition to the original
  * indented flavor.  As a result, this code is modified to also accept
  * that syntax as of April 2019.
  */
@@ -74,7 +74,7 @@ bool AutoProject::createProject() {
                 emit(srcfile, line);
             }
         } else if (inDelimitedFile) {
-            // stop writing if delimited line 
+            // stop writing if delimited line
             if (isDelimited(line)) {
                 std::swap(prevline, line);
                 srcfile.close();
@@ -128,11 +128,11 @@ bool AutoProject::createProject() {
                     }
                 }
             } else {
-                if (!isEmptyOrUnderline(line)) 
+                if (!isEmptyOrUnderline(line))
                     std::swap(prevline, line);
             }
         }
-    }        
+    }
     in.close();
     if (!srcnames.empty()) {
         writeSrcLevel();
@@ -176,7 +176,7 @@ std::string& rtrim(std::string& str, const std::string_view pattern) {
 
 std::string& trim(std::string& str, char ch) {
     auto it{str.begin()};
-    for ( ; (*it == ch || isspace(*it)) && it != str.end(); ++it) 
+    for ( ; (*it == ch || isspace(*it)) && it != str.end(); ++it)
     { }
     if (it != str.end()) {
         str.erase(str.begin(), it);
@@ -241,7 +241,7 @@ void AutoProject::writeTopLevel() const {
     // TODO: use replaceable boilerplate in a config file
     // write CMakeLists.txt top level to projname
     std::ofstream topcmake(projname + "/CMakeLists.txt");
-    topcmake << 
+    topcmake <<
             "cmake_minimum_required(" << cmakeVersion << ")\n"
             "project(" << projname << ")\n"
             "set(CMAKE_CXX_STANDARD 14)\n"
@@ -251,46 +251,48 @@ void AutoProject::writeTopLevel() const {
 
 void AutoProject::checkRules(const std::string &line) {
     // TODO: provide mechanism to load rules from file(s)
-    static const struct Rule { 
+    static const struct Rule {
         const std::regex re;
         const std::string cmake;
         Rule(std::string reg, std::string result) : re{reg}, cmake{result} {}
     } rules[]{
-        { R"(\s*#include\s*<(experimental/)?filesystem>)", 
+        { R"(\s*#include\s*<(experimental/)?filesystem>)",
             "if (\"${CMAKE_CXX_COMPILER_ID}\" STREQUAL \"GNU\")\n"
             "  target_link_libraries(${EXECUTABLE_NAME} stdc++fs)\n"
-            "endif()\n" 
+            "endif()\n"
         },
         { R"(\s*#include\s*<thread>)", "find_package(Threads REQUIRED)\n"
                 "target_link_libraries(${EXECUTABLE_NAME} ${CMAKE_THREAD_LIBS_INIT})"},
         { R"(\s*#include\s*<future>)", "find_package(Threads REQUIRED)\n"
                 "target_link_libraries(${EXECUTABLE_NAME} ${CMAKE_THREAD_LIBS_INIT})"},
-        { R"(\s*#include\s*<SFML/Graphics.hpp>)", 
+        { R"(\s*#include\s*<SFML/Graphics.hpp>)",
                     "find_package(SFML REQUIRED COMPONENTS system window graphics)\n"
                     "if(SFML_FOUND)\n"
                     "  include_directories(${SFML_INCLUDE_DIR})\n"
                     "  target_link_libraries(${EXECUTABLE_NAME} sfml-graphics)\n"
                     "endif()" },
-        { R"(\s*#include\s*<GL/glew.h>)", 
+        { R"(\s*#include\s*<GL/glew.h>)",
                     "find_package(GLEW REQUIRED)\ntarget_link_libraries(${EXECUTABLE_NAME} ${GLEW_LIBRARIES})" },
-        { R"(\s*#include\s*<GL/glut.h>)", 
+        { R"(\s*#include\s*<GL/glut.h>)",
                     R"(find_package(GLUT REQUIRED)
 find_package(OpenGL REQUIRED)
 target_link_libraries(${EXECUTABLE_NAME} ${OPENGL_LIBRARIES} ${GLUT_LIBRARIES}))" },
-        { R"(\s*#include\s*<OpenGL/gl.h>)", 
+        { R"(\s*#include\s*<OpenGL/gl.h>)",
                     "find_package(OpenGL REQUIRED)\ntarget_link_libraries(${EXECUTABLE_NAME} ${OPENGL_LIBRARIES})" },
-        { R"(\s*#include\s*<SDL2/SDL.h>)", 
+        { R"(\s*#include\s*<opencv2/opencv.hpp>)",
+                    "find_package(OpenCV REQUIRED)\ntarget_link_libraries(${EXECUTABLE_NAME} ${OpenCV_LIBRARIES})" },
+        { R"(\s*#include\s*<SDL2/SDL.h>)",
                     "find_package(SDL2 REQUIRED)\ntarget_link_libraries(${EXECUTABLE_NAME} ${SDL2_LIBRARIES})" },
         // the SDL2_ttf.cmake package doesn't yet ship with CMake
-        { R"(\s*#include\s*<SDL2/SDL_ttf.h>)", 
+        { R"(\s*#include\s*<SDL2/SDL_ttf.h>)",
                     "find_package(SDL2_ttf REQUIRED)\ntarget_link_libraries(${EXECUTABLE_NAME} ${SDL2_TTF_LIBRARIES})" },
-        { R"(\s*#include\s*<GLFW/glfw3.h>)", 
+        { R"(\s*#include\s*<GLFW/glfw3.h>)",
                     "find_package(glfw3 REQUIRED)\ntarget_link_libraries(${EXECUTABLE_NAME} glfw)" },
-        { R"(\s*#include\s*<boost/regex.hpp>)", 
+        { R"(\s*#include\s*<boost/regex.hpp>)",
                     "find_package(Boost REQUIRED COMPONENTS regex)\ntarget_link_libraries(${EXECUTABLE_NAME} ${Boost_LIBRARIES})" },
-        { R"(\s*#include\s*<png.h>)", 
+        { R"(\s*#include\s*<png.h>)",
                     "find_package(PNG REQUIRED)\ntarget_link_libraries(${EXECUTABLE_NAME} ${PNG_LIBRARIES})" },
-        { R"(\s*#include\s*<ncurses.h>)", 
+        { R"(\s*#include\s*<ncurses.h>)",
                     "find_package(Curses REQUIRED)\ntarget_link_libraries(${EXECUTABLE_NAME} ${CURSES_LIBRARIES})" },
         { R"(\s*#include\s*<SDL2.SDL.h>)",
             R"(include(FindPkgConfig)
@@ -299,7 +301,7 @@ INCLUDE_DIRECTORIES(${SDL2_INCLUDE_DIRS})
 TARGET_LINK_LIBRARIES(${EXECUTABLE_NAME} ${SDL2_LIBRARIES})
 )" },
         // experimental support for Qt5; not sure if Widgets is correct
-        { R"(\s*#include\s*<QString>)", 
+        { R"(\s*#include\s*<QString>)",
                     R"(find_package(Qt5Widgets)
 set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTOUIC ON)
@@ -307,9 +309,9 @@ set(CMAKE_INCLUDE_CURRENT_DIR ON)
 message(FATAL_ERROR "You must move the 'add_executable' here and delete this line")
 target_link_libraries(${EXECUTABLE_NAME} "Qt5::Widgets")
 )" },
-        { R"(\s*#include\s*<openssl/ssl.h>)", 
+        { R"(\s*#include\s*<openssl/ssl.h>)",
                     "find_package(OpenSSL REQUIRED)\ntarget_link_libraries(${EXECUTABLE_NAME} ${OPENSSL_LIBRARIES})" },
-        { R"(\s*#include\s*<boost/filesystem.hpp>)", 
+        { R"(\s*#include\s*<boost/filesystem.hpp>)",
                     "find_package(Boost REQUIRED COMPONENTS filesystem)\ntarget_link_libraries(${EXECUTABLE_NAME} ${Boost_LIBRARIES})" },
     };
     std::smatch sm;
@@ -347,7 +349,7 @@ bool AutoProject::isDelimited(const std::string& line) const {
 std::string &AutoProject::replaceLeadingTabs(std::string &line) const {
     std::size_t tabcount{0};
     for (auto ch: line) {
-        if (ch != '\t') 
+        if (ch != '\t')
             break;
         ++tabcount;
     }

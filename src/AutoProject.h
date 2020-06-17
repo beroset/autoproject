@@ -20,7 +20,7 @@ class FileExtensionException : public std::runtime_error
 public:
     FileExtensionException(const std::string& msg) :
         std::runtime_error(msg)
-    {} 
+    {}
 };
 
 class AutoProject {
@@ -35,7 +35,7 @@ public:
     void copyFile() const;
     friend std::ostream& operator<<(std::ostream& out, const AutoProject &ap);
 
-    static const std::string mdextension;  
+    static const std::string mdextension;
 private:
     void makeTree();
     void checkRules(const std::string &line);
