@@ -11,6 +11,7 @@ class ConfigFile
 public:
     ConfigFile(const std::string& filename);
     ConfigFile(std::istream& in);
+    bool rewrite(const std::string& filename) const;
     bool has_value(const std::string& sectionname, const std::string& keyname) const;
     std::string get_value(const std::string& sectionname, const std::string& keyname) const;
     void set_value(const std::string& sectionname, const std::string& keyname, const std::string& value);

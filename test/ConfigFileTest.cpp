@@ -14,6 +14,9 @@ class ConfigFileTest : public CppUnit::TestFixture {
     CPPUNIT_TEST_SUITE(ConfigFileTest);
     CPPUNIT_TEST(streamInput);
     CPPUNIT_TEST(streamOutput);
+    CPPUNIT_TEST(fileOutput);
+    CPPUNIT_TEST(fileInput);
+    CPPUNIT_TEST(rewriteTest);
     CPPUNIT_TEST(setValue);
     CPPUNIT_TEST(delete_key);
     CPPUNIT_TEST(delete_last_key);
@@ -40,13 +43,63 @@ public:
 	name = Robert "Bob" Smith
 [protocol]
 	version = 6
-[]
-	active = false
 )"};
         std::stringstream answer;
         answer << cfg;
         std::cout << "Desired \"" << desired << "\"\n"
             << "got \"" << answer.str() << "\"\n";
+        CPPUNIT_ASSERT(answer.str() == desired);
+    }
+
+    void fileInput() {
+        std::string filename{"ConfigFileUnitTest_fileInput.conf"};
+        std::ofstream out{filename};
+        out << sample;
+        out.close();
+        ConfigFile cfg(filename);
+        const std::string desired{"bob@smith.com"};
+        auto answer = cfg.get_value("user", "email");
+        std::cout << "email = \"" << answer << "\", wanted \"" 
+            << desired << "\"\n";
+        CPPUNIT_ASSERT(answer == desired);
+    }
+
+    void fileOutput() {
+        std::stringstream ss(sample);
+        ConfigFile cfg{ss};
+        std::string_view desired{R"([user]
+	active = true
+	pi = 3.14159
+	email = bob@smith.com
+	name = Robert "Bob" Smith
+[protocol]
+	version = 6
+)"};
+        std::ofstream cfgfile{"ConfigFileUnitTest.conf"};
+        cfgfile << cfg;
+    }
+
+    void rewriteTest() {
+        std::string filename{"ConfigFileUnitTest_rewriteTest.conf"};
+        std::ofstream out{filename};
+        out << sample;
+        out.close();
+        ConfigFile cfg{filename};
+        cfg.delete_key("protocol", "version");
+        cfg.rewrite(filename);
+        std::string_view desired{R"(; This is a sample ini file
+
+[user]
+	name = Robert "Bob" Smith
+	email = bob@smith.com
+	active = true
+	# this is also a comment
+	pi = 3.14159
+)"};
+        std::ifstream rewritten{filename};
+        std::stringstream answer;
+        answer << rewritten.rdbuf();
+
         CPPUNIT_ASSERT(answer.str() == desired);
     }
 
@@ -95,7 +148,6 @@ public:
 
 private:
     const std::string sample{"; This is a sample ini file\n"
-          "active = false \n"
           "[protocol]\n"
           "version = 6     \n"
           "\n"
@@ -103,18 +155,17 @@ private:
           "name = Robert \"Bob\" Smith       \n"
           "email = bob@smith.com \n"
           "active = true\n"
-          "\n"
+          "\t# this is also a comment\n"
           "pi = 3.14159"};
 };
 
 CPPUNIT_TEST_SUITE_REGISTRATION(ConfigFileTest);
 
-int main()
-{
-  CppUnit::TextUi::TestRunner runner;
-  CppUnit::TestFactoryRegistry &registry = CppUnit::TestFactoryRegistry::getRegistry();
-  runner.addTest( registry.makeTest() );
-  bool wasSuccessful = runner.run();
-  std::cout << "wasSuccessful = " << std::boolalpha << wasSuccessful << '\n';
-  return !wasSuccessful;
+int main() {
+    CppUnit::TextUi::TestRunner runner;
+    CppUnit::TestFactoryRegistry &registry = CppUnit::TestFactoryRegistry::getRegistry();
+    runner.addTest( registry.makeTest() );
+    bool wasSuccessful = runner.run();
+    std::cout << "wasSuccessful = " << std::boolalpha << wasSuccessful << '\n';
+    return !wasSuccessful;
 }

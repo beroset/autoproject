@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.1)
 set(EXECUTABLE_NAME "autoproject")
 add_library(ConfigFile ConfigFile.cpp)
-add_executable(${EXECUTABLE_NAME} main.cpp AutoProject.cpp ConfigFile.cpp)
+add_executable(${EXECUTABLE_NAME} main.cpp AutoProject.cpp)
 if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
     target_link_libraries(${EXECUTABLE_NAME} ConfigFile stdc++fs)
 endif()

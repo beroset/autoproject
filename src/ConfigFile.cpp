@@ -6,6 +6,7 @@
 #include <algorithm>
 #include <unordered_map>
 #include <regex>
+#include <filesystem>
 
 ConfigFile::ConfigFile(const std::string& filename)
 : map{} {
@@ -19,7 +20,7 @@ ConfigFile::ConfigFile(std::istream& in) : map{} {
 }
 
 void ConfigFile::parse(std::istream& in) {
-    static const std::regex comment_regex{R"x(\s*[;#])x"};
+    static const std::regex comment_regex{R"x(\s*[;#]$)x"};
     static const std::regex section_regex{R"x(\s*\[([^\]]+)\])x"};
     static const std::regex value_regex{R"x(\s*(\S[^ \t=]*)\s*=\s*((\s?\S+)+)\s*$)x"};
     std::string current_section;
@@ -41,6 +42,61 @@ void ConfigFile::parse(std::istream& in) {
             }
         }
     }
+}
+
+bool ConfigFile::rewrite(const std::string& filename) const {
+    static const std::regex comment_regex{R"x(\s*[;#].*)x"};
+    static const std::regex section_regex{R"x(\s*\[([^\]]+)\]\s*)x"};
+    static const std::regex value_regex{R"x(\s*(\S[^ \t=]*)\s*=\s*((\s?\S+)+)\s*)x"};
+    static const std::string suffix{".swp"};
+    std::string current_section;
+    std::smatch pieces;
+    std::ifstream in(filename);
+    std::ofstream out(filename + suffix);
+    auto alt{*this};
+    for (std::string line; std::getline(in, line);)
+    {
+        if (line.empty() || std::regex_match(line, pieces, comment_regex)) {
+            // echo comment lines and blank lines
+            out << line << '\n';
+        }
+        else if (std::regex_match(line, pieces, section_regex)) {
+            if (pieces.size() == 2) { // exactly one match
+                if (current_section != pieces[1].str() && has_section(pieces[1].str())) {
+                    // finish up the current section before moving on
+                    if (alt.has_section(current_section)) {
+                        for (const auto &item : map.at(current_section)) {
+                            if (alt.has_value(current_section, item.first)) {
+                                out << '\t' << item.first << " = " << item.second << '\n';
+                                alt.delete_key(current_section, item.first);
+                            }
+                        }
+                    } else {
+                        current_section = pieces[1].str();
+                        out << line << '\n';
+                    }
+                }
+            }
+        }
+        else if (std::regex_match(line, pieces, value_regex)) {
+            if (pieces.size() == 4) { // exactly enough matches
+                const auto key{pieces[1].str()};
+                if (alt.has_value(current_section, key)) {
+                    out << '\t' << pieces[1].str() << " = " << get_value(current_section, key) << '\n';
+                    alt.delete_key(current_section, key);
+                }
+            }
+        }
+    }
+    if (alt.has_section(current_section)) {
+        for (auto &item : alt.map.at(current_section)) {
+            out << '\t' << item.first << " = " << item.second << '\n';
+            alt.delete_key(current_section, item.first);
+        }
+    }
+    std::filesystem::remove(filename);
+    std::filesystem::rename(filename + suffix, filename);
+    return true;
 }
 
 bool ConfigFile::has_value(const std::string& sectionname, const std::string& keyname) const { 
