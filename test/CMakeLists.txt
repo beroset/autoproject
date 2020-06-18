@@ -1,6 +1,9 @@
 cmake_minimum_required(VERSION 3.1)
 include_directories( ${CMAKE_HOME_DIRECTORY}/src )
 add_executable(ConfigFileTest ConfigFileTest.cpp)
+add_executable(AutoProjectTest AutoProjectTest.cpp)
 add_test(ConfigFileTest ConfigFileTest)
+add_test(AutoProjectTest AutoProjectTest)
 
 target_link_libraries(ConfigFileTest ConfigFile cppunit)
+target_link_libraries(AutoProjectTest AutoProject cppunit)

@@ -8,11 +8,13 @@
 
 using namespace std::literals;
 
-const std::string AutoProject::mdextension{".md"};
+// local constants
+static const std::string mdextension{".md"};
 static constexpr std::string_view cmakeVersion{"VERSION 3.1"};
 static constexpr unsigned indentLevel{4};
 static constexpr unsigned delimLength{3};
 
+// helper functions
 static std::string& trim(std::string& str, const std::string_view pattern);
 static std::string& rtrim(std::string& str, const std::string_view pattern);
 static std::string& trim(std::string& str, char ch);
@@ -22,6 +24,8 @@ static bool isNonEmptyIndented(const std::string& line);
 static bool isIndentedOrEmpty(const std::string& line);
 static bool isEmptyOrUnderline(const std::string& line);
 static bool isDelimited(const std::string& line);
+static bool isSourceExtension(const std::string_view ext);
+static bool isSourceFilename(std::string &line);
 static std::string &replaceLeadingTabs(std::string &line);
 static void emit(std::ostream& out, const std::string &line);
 static void emitVerbatim(std::ostream& out, const std::string &line);
@@ -194,7 +198,7 @@ std::string& rtrim(std::string& str, char ch) {
     return str;
 }
 
-bool AutoProject::isSourceFilename(std::string &line) const {
+bool isSourceFilename(std::string &line) {
     trimExtras(line);
     return isSourceExtension(fs::path(line).extension().string());
 }
@@ -227,15 +231,21 @@ void AutoProject::writeSrcLevel() const {
     // TODO: the add_executable line needs to be *after* "set(CMAKE_AUTOMOC ON)" but before "target_link_libraries..."
     srccmake <<
             "cmake_minimum_required(" << cmakeVersion << ")\n"
-            "set(EXECUTABLE_NAME \"" << projname << "\")\n"
+            "set(EXECUTABLE_NAME \"" << projname << "\")\n";
+    for (const auto &rule : extraRules) {
+        srccmake << rule << '\n';
+    }
+    srccmake <<
             "add_executable(${EXECUTABLE_NAME}";
     for (const auto& fn : srcnames) {
         srccmake << ' ' << fn;
     }
-    srccmake << ")\n";
-    for (const auto &rule : extraRules) {
-        srccmake << rule << '\n';
+    srccmake <<
+            ")\ntarget_link_libraries(${EXECUTABLE_NAME} ";
+    for (const auto &lib : libraries) {
+        srccmake << lib << ' ';
     }
+    srccmake << ")\n";
     srccmake.close();
 }
 
@@ -256,66 +266,71 @@ void AutoProject::checkRules(const std::string &line) {
     static const struct Rule {
         const std::regex re;
         const std::string cmake;
-        Rule(std::string reg, std::string result) : re{reg}, cmake{result} {}
+        const std::string libraries;
+        Rule(std::string reg, std::string result, std::string libraries) : re{reg}, cmake{result}, libraries{libraries} {}
     } rules[]{
-        { R"(\s*#include\s*<(experimental/)?filesystem>)",
-            "if (\"${CMAKE_CXX_COMPILER_ID}\" STREQUAL \"GNU\")\n"
-            "  target_link_libraries(${EXECUTABLE_NAME} stdc++fs)\n"
-            "endif()\n"
-        },
-        { R"(\s*#include\s*<thread>)", "find_package(Threads REQUIRED)\n"
-                "target_link_libraries(${EXECUTABLE_NAME} ${CMAKE_THREAD_LIBS_INIT})"},
-        { R"(\s*#include\s*<future>)", "find_package(Threads REQUIRED)\n"
-                "target_link_libraries(${EXECUTABLE_NAME} ${CMAKE_THREAD_LIBS_INIT})"},
+        { R"(\s*#include\s*<(experimental/)?filesystem>)","",
+            "stdc++fs" },
+        { R"(\s*#include\s*<thread>)", "find_package(Threads REQUIRED)\n",
+                "${CMAKE_THREAD_LIBS_INIT}"},
+        { R"(\s*#include\s*<future>)", "find_package(Threads REQUIRED)\n",
+                "${CMAKE_THREAD_LIBS_INIT}"},
         { R"(\s*#include\s*<SFML/Graphics.hpp>)",
                     "find_package(SFML REQUIRED COMPONENTS System Window Graphics)\n"
-                    "if(SFML_FOUND)\n"
-                    "  include_directories(${SFML_INCLUDE_DIR})\n"
-                    "  target_link_libraries(${EXECUTABLE_NAME} ${SFML_LIBRARIES})\n"
-                    "endif()" },
+                    "include_directories(${SFML_INCLUDE_DIR})\n",
+                    "${SFML_LIBRARIES}"},
         { R"(\s*#include\s*<GL/glew.h>)",
-                    "find_package(GLEW REQUIRED)\ntarget_link_libraries(${EXECUTABLE_NAME} ${GLEW_LIBRARIES})" },
+                    "find_package(GLEW REQUIRED)\n",
+                    "${GLEW_LIBRARIES}" },
         { R"(\s*#include\s*<GL/glut.h>)",
-                    R"(find_package(GLUT REQUIRED)
-find_package(OpenGL REQUIRED)
-target_link_libraries(${EXECUTABLE_NAME} ${OPENGL_LIBRARIES} ${GLUT_LIBRARIES}))" },
+                    "find_package(GLUT REQUIRED)\n"
+                    "find_package(OpenGL REQUIRED)\n",
+                    "${OPENGL_LIBRARIES} ${GLUT_LIBRARIES}" },
         { R"(\s*#include\s*<OpenGL/gl.h>)",
-                    "find_package(OpenGL REQUIRED)\ntarget_link_libraries(${EXECUTABLE_NAME} ${OPENGL_LIBRARIES})" },
+                    "find_package(OpenGL REQUIRED)\n",
+                    "${OPENGL_LIBRARIES}" },
         { R"(\s*#include\s*<SDL2/SDL.h>)",
-                    "find_package(SDL2 REQUIRED)\ntarget_link_libraries(${EXECUTABLE_NAME} ${SDL2_LIBRARIES})" },
+                    "find_package(SDL2 REQUIRED)\n",
+                    "${SDL2_LIBRARIES}" },
         // the SDL2_ttf.cmake package doesn't yet ship with CMake
         { R"(\s*#include\s*<SDL2/SDL_ttf.h>)",
-                    "find_package(SDL2_ttf REQUIRED)\ntarget_link_libraries(${EXECUTABLE_NAME} ${SDL2_TTF_LIBRARIES})" },
+                    "find_package(SDL2_ttf REQUIRED)\n",
+                    "${SDL2_TTF_LIBRARIES}" },
         { R"(\s*#include\s*<GLFW/glfw3.h>)",
-                    "find_package(glfw3 REQUIRED)\ntarget_link_libraries(${EXECUTABLE_NAME} glfw)" },
+                    "find_package(glfw3 REQUIRED)\n",
+                    "glfw" },
         { R"(\s*#include\s*<boost/regex.hpp>)",
-                    "find_package(Boost REQUIRED COMPONENTS regex)\ntarget_link_libraries(${EXECUTABLE_NAME} ${Boost_LIBRARIES})" },
+                    "find_package(Boost REQUIRED COMPONENTS regex)\n",
+                    "${Boost_LIBRARIES}" },
         { R"(\s*#include\s*<png.h>)",
-                    "find_package(PNG REQUIRED)\ntarget_link_libraries(${EXECUTABLE_NAME} ${PNG_LIBRARIES})" },
+                    "find_package(PNG REQUIRED)\n",
+                    "${PNG_LIBRARIES}" },
         { R"(\s*#include\s*<ncurses.h>)",
-                    "find_package(Curses REQUIRED)\ntarget_link_libraries(${EXECUTABLE_NAME} ${CURSES_LIBRARIES})" },
+                    "find_package(Curses REQUIRED)\n",
+                    "${CURSES_LIBRARIES}" },
         { R"(\s*#include\s*<SDL2.SDL.h>)",
             R"(include(FindPkgConfig)
 PKG_SEARCH_MODULE(SDL2 REQUIRED sdl2)
 INCLUDE_DIRECTORIES(${SDL2_INCLUDE_DIRS})
-TARGET_LINK_LIBRARIES(${EXECUTABLE_NAME} ${SDL2_LIBRARIES})
-)" },
+)",
+                    "${SDL2_LIBRARIES}" },
         // experimental support for Qt5; not sure if Widgets is correct
         { R"(\s*#include\s*<QString>)",
                     R"(find_package(Qt5Widgets)
 set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTOUIC ON)
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
-message(FATAL_ERROR "You must move the 'add_executable' here and delete this line")
-target_link_libraries(${EXECUTABLE_NAME} "Qt5::Widgets")
-)" },
+)",
+                    "Qt5::Widgets"},
         { R"(\s*#include\s*<openssl/ssl.h>)",
-                    "find_package(OpenSSL REQUIRED)\ntarget_link_libraries(${EXECUTABLE_NAME} ${OPENSSL_LIBRARIES})" },
+                    "find_package(OpenSSL REQUIRED)\n",
+                    "${OPENSSL_LIBRARIES}" },
     };
     std::smatch sm;
     for (const auto &rule : rules) {
         if (std::regex_search(line, sm, rule.re)) {
             extraRules.emplace(rule.cmake);
+            libraries.emplace(rule.libraries);
         }
     }
 }

@@ -28,17 +28,20 @@ public:
     AutoProject() = default;
     AutoProject(fs::path mdFilename);
     void open(fs::path mdFilename);
-
+    // create the project
     bool createProject();
+    /// print final status to `out`
     friend std::ostream& operator<<(std::ostream& out, const AutoProject &ap);
 
-    static const std::string mdextension;
 private:
     void writeTopLevel() const;
     void writeSrcLevel() const;
     void makeTree();
+    /*! check the passed line against the rule set.
+     *
+     * If it matches, add the corresponding rule to `extraRules`.
+     */
     void checkRules(const std::string &line);
-    bool isSourceFilename(std::string& line) const;
 
     fs::path mdfile;
     std::string projname;
@@ -46,5 +49,6 @@ private:
     std::ifstream in;
     std::unordered_set<fs::path, path_hash> srcnames;
     std::unordered_set<std::string> extraRules;
+    std::unordered_set<std::string> libraries;
 };
 #endif // AUTOPROJECT_H
