@@ -17,7 +17,7 @@ class AutoProjectTest : public CppUnit::TestFixture {
 public:
     void sourceFilename() {
         AutoProject ap;
-        CPPUNIT_ASSERT(!ap.createProject());
+        CPPUNIT_ASSERT(!ap.createProject(false));
     }
 
 private:

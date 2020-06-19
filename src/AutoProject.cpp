@@ -63,7 +63,7 @@ bool isSourceExtension(const std::string_view ext) {
  * indented flavor.  As a result, this code is modified to also accept
  * that syntax as of April 2019.
  */
-bool AutoProject::createProject() {
+bool AutoProject::createProject(bool overwrite) {
     std::string prevline;
     bool inIndentedFile{false};
     bool inDelimitedFile{false};
@@ -103,7 +103,7 @@ bool AutoProject::createProject() {
                     srcfilename = fs::path(srcdir) / "main.cpp";
                 }
                 if (firstFile) {
-                    makeTree();
+                    makeTree(overwrite);
                     firstFile = false;
                 }
                 srcfile.open(srcfilename);
@@ -115,7 +115,7 @@ bool AutoProject::createProject() {
                 // if previous line was filename, open that file and start writing
                 if (isSourceFilename(prevline)) {
                     if (firstFile) {
-                        makeTree();
+                        makeTree(overwrite);
                         firstFile = false;
                     }
                     srcfilename = fs::path(srcdir) / prevline;
@@ -127,7 +127,7 @@ bool AutoProject::createProject() {
                         inIndentedFile = true;
                     }
                 } else if (firstFile && !line.empty()) {  // un-named source file
-                    makeTree();
+                    makeTree(overwrite);
                     firstFile = false;
                     srcfilename = fs::path(srcdir) / "main.cpp";
                     srcfile.open(srcfilename);
@@ -154,8 +154,8 @@ bool AutoProject::createProject() {
     return !srcnames.empty();
 }
 
-void AutoProject::makeTree() {
-    if (fs::exists(projname)) {
+void AutoProject::makeTree(bool overwrite) {
+    if (fs::exists(projname) && !overwrite) {
         throw std::runtime_error(projname + " already exists: will not overwrite.");
     }
     if (!fs::create_directories(srcdir)) {

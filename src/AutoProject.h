@@ -29,14 +29,14 @@ public:
     AutoProject(fs::path mdFilename);
     void open(fs::path mdFilename);
     // create the project
-    bool createProject();
+    bool createProject(bool overwrite);
     /// print final status to `out`
     friend std::ostream& operator<<(std::ostream& out, const AutoProject &ap);
 
 private:
     void writeTopLevel() const;
     void writeSrcLevel() const;
-    void makeTree();
+    void makeTree(bool overwrite);
     /*! check the passed line against the rule set.
      *
      * If it matches, add the corresponding rule to `extraRules`.

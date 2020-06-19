@@ -67,7 +67,7 @@ int main(int argc, char *argv[])
         return 1;
     }
     try {
-        if (ap.createProject()) {
+        if (ap.createProject(args.at("--force-overwrite"))) {
             std::cout << ap;   // print final status
         }
     }
