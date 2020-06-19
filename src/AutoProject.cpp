@@ -149,19 +149,25 @@ bool AutoProject::createProject(bool overwrite) {
         writeSrcLevel();
         writeTopLevel();
         // copy md file to projname/src
-        fs::copy_file(mdfile, srcdir + "/" + projname + mdextension);
+        auto options = overwrite ? fs::copy_options::overwrite_existing : fs::copy_options::none;
+        fs::copy_file(mdfile, srcdir + "/" + projname + mdextension, options);
     }
     return !srcnames.empty();
 }
 
 void AutoProject::makeTree(bool overwrite) {
-    if (fs::exists(projname) && !overwrite) {
-        throw std::runtime_error(projname + " already exists: will not overwrite.");
+    if (overwrite) {
+        fs::create_directories(srcdir);
+        fs::create_directories(projname + "/build");
+    } else {
+        if (fs::exists(projname)) {
+            throw std::runtime_error(projname + " already exists: will not overwrite.");
+        }
+        if (!fs::create_directories(srcdir)) {
+            throw std::runtime_error("Cannot create directory "s + srcdir);
+        }
+        fs::create_directories(projname + "/build");
     }
-    if (!fs::create_directories(srcdir)) {
-        throw std::runtime_error("Cannot create directory "s + srcdir);
-    }
-    fs::create_directories(projname + "/build");
 }
 
 std::string& trim(std::string& str, const std::string_view pattern) {
@@ -269,7 +275,6 @@ void AutoProject::checkRules(const std::string &line) {
         const std::string libraries;
         Rule(std::string reg, std::string result, std::string libraries) : re{reg}, cmake{result}, libraries{libraries} {}
     } rules[]{
-=======
         { R"(\s*#include\s*<(experimental/)?filesystem>)","",
             "stdc++fs" },
         { R"(\s*#include\s*<thread>)", "find_package(Threads REQUIRED)\n",

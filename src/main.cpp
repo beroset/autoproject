@@ -50,17 +50,24 @@ int main(int argc, char *argv[])
             option->second = !option->second;
             ++processed_args;
         }
+        auto shortoption = shortargs.find(argv[i]);
+        if (shortoption != shortargs.end()) {
+            std::cout << "Found option " << shortoption->first << '\n';
+            option = args.find(shortoption->second);
+            option->second = !option->second;
+            ++processed_args;
+        }
     }
     if (args.at("--license")) {
         std::cout << license;
     }
-    if (argc-processed_args != 2) {
+    if (argc - processed_args != 2) {
         std::cerr << "Usage: autoproject project.md\nCreates a CMake build tree under 'project' subdirectory\n";
         return 0;
     }
     AutoProject ap;
     try {
-        ap.open(argv[1]);
+        ap.open(argv[argc - processed_args]);
     }
     catch(std::exception& e) {
         std::cerr << "Error: " << e.what() << '\n';
