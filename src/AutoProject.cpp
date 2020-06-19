@@ -269,45 +269,6 @@ void AutoProject::checkRules(const std::string &line) {
         const std::string libraries;
         Rule(std::string reg, std::string result, std::string libraries) : re{reg}, cmake{result}, libraries{libraries} {}
     } rules[]{
-<<<<<<< HEAD
-        { R"(\s*#include\s*<(experimental/)?filesystem>)",
-            "if (\"${CMAKE_CXX_COMPILER_ID}\" STREQUAL \"GNU\")\n"
-            "  target_link_libraries(${EXECUTABLE_NAME} stdc++fs)\n"
-            "endif()\n"
-        },
-        { R"(\s*#include\s*<thread>)", "find_package(Threads REQUIRED)\n"
-                "target_link_libraries(${EXECUTABLE_NAME} ${CMAKE_THREAD_LIBS_INIT})"},
-        { R"(\s*#include\s*<future>)", "find_package(Threads REQUIRED)\n"
-                "target_link_libraries(${EXECUTABLE_NAME} ${CMAKE_THREAD_LIBS_INIT})"},
-        { R"(\s*#include\s*<SFML/Graphics.hpp>)",
-                    "find_package(SFML REQUIRED COMPONENTS system window graphics)\n"
-                    "if(SFML_FOUND)\n"
-                    "  include_directories(${SFML_INCLUDE_DIR})\n"
-                    "  target_link_libraries(${EXECUTABLE_NAME} sfml-graphics)\n"
-                    "endif()" },
-        { R"(\s*#include\s*<GL/glew.h>)",
-                    "find_package(GLEW REQUIRED)\ntarget_link_libraries(${EXECUTABLE_NAME} ${GLEW_LIBRARIES})" },
-        { R"(\s*#include\s*<GL/glut.h>)",
-                    R"(find_package(GLUT REQUIRED)
-find_package(OpenGL REQUIRED)
-target_link_libraries(${EXECUTABLE_NAME} ${OPENGL_LIBRARIES} ${GLUT_LIBRARIES}))" },
-        { R"(\s*#include\s*<OpenGL/gl.h>)",
-                    "find_package(OpenGL REQUIRED)\ntarget_link_libraries(${EXECUTABLE_NAME} ${OPENGL_LIBRARIES})" },
-        { R"(\s*#include\s*<opencv2/opencv.hpp>)",
-                    "find_package(OpenCV REQUIRED)\ntarget_link_libraries(${EXECUTABLE_NAME} ${OpenCV_LIBRARIES})" },
-        { R"(\s*#include\s*<SDL2/SDL.h>)",
-                    "find_package(SDL2 REQUIRED)\ntarget_link_libraries(${EXECUTABLE_NAME} ${SDL2_LIBRARIES})" },
-        // the SDL2_ttf.cmake package doesn't yet ship with CMake
-        { R"(\s*#include\s*<SDL2/SDL_ttf.h>)",
-                    "find_package(SDL2_ttf REQUIRED)\ntarget_link_libraries(${EXECUTABLE_NAME} ${SDL2_TTF_LIBRARIES})" },
-        { R"(\s*#include\s*<GLFW/glfw3.h>)",
-                    "find_package(glfw3 REQUIRED)\ntarget_link_libraries(${EXECUTABLE_NAME} glfw)" },
-        { R"(\s*#include\s*<boost/regex.hpp>)",
-                    "find_package(Boost REQUIRED COMPONENTS regex)\ntarget_link_libraries(${EXECUTABLE_NAME} ${Boost_LIBRARIES})" },
-        { R"(\s*#include\s*<png.h>)",
-                    "find_package(PNG REQUIRED)\ntarget_link_libraries(${EXECUTABLE_NAME} ${PNG_LIBRARIES})" },
-        { R"(\s*#include\s*<ncurses.h>)",
-                    "find_package(Curses REQUIRED)\ntarget_link_libraries(${EXECUTABLE_NAME} ${CURSES_LIBRARIES})" },
 =======
         { R"(\s*#include\s*<(experimental/)?filesystem>)","",
             "stdc++fs" },
@@ -329,9 +290,9 @@ target_link_libraries(${EXECUTABLE_NAME} ${OPENGL_LIBRARIES} ${GLUT_LIBRARIES}))
         { R"(\s*#include\s*<OpenGL/gl.h>)",
                     "find_package(OpenGL REQUIRED)\n",
                     "${OPENGL_LIBRARIES}" },
-        { R"(\s*#include\s*<SDL2/SDL.h>)",
-                    "find_package(SDL2 REQUIRED)\n",
-                    "${SDL2_LIBRARIES}" },
+        { R"(\s*#include\s*<opencv2/opencv.hpp>)",
+                    "find_package(OpenCV REQUIRED)\n",
+                    "${OpenCV_LIBRARIES}" },
         // the SDL2_ttf.cmake package doesn't yet ship with CMake
         { R"(\s*#include\s*<SDL2/SDL_ttf.h>)",
                     "find_package(SDL2_ttf REQUIRED)\n",
@@ -342,13 +303,15 @@ target_link_libraries(${EXECUTABLE_NAME} ${OPENGL_LIBRARIES} ${GLUT_LIBRARIES}))
         { R"(\s*#include\s*<boost/regex.hpp>)",
                     "find_package(Boost REQUIRED COMPONENTS regex)\n",
                     "${Boost_LIBRARIES}" },
+        { R"(\s*#include\s*<boost/filesystem.hpp>)",
+                    "find_package(Boost REQUIRED COMPONENTS filesystem)\n",
+                    "${Boost_LIBRARIES}" },
         { R"(\s*#include\s*<png.h>)",
                     "find_package(PNG REQUIRED)\n",
                     "${PNG_LIBRARIES}" },
         { R"(\s*#include\s*<ncurses.h>)",
                     "find_package(Curses REQUIRED)\n",
                     "${CURSES_LIBRARIES}" },
->>>>>>> rulesfile
         { R"(\s*#include\s*<SDL2.SDL.h>)",
             R"(include(FindPkgConfig)
 PKG_SEARCH_MODULE(SDL2 REQUIRED sdl2)
@@ -361,21 +324,11 @@ INCLUDE_DIRECTORIES(${SDL2_INCLUDE_DIRS})
 set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTOUIC ON)
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
-<<<<<<< HEAD
-message(FATAL_ERROR "You must move the 'add_executable' here and delete this line")
-target_link_libraries(${EXECUTABLE_NAME} "Qt5::Widgets")
-)" },
-        { R"(\s*#include\s*<openssl/ssl.h>)",
-                    "find_package(OpenSSL REQUIRED)\ntarget_link_libraries(${EXECUTABLE_NAME} ${OPENSSL_LIBRARIES})" },
-        { R"(\s*#include\s*<boost/filesystem.hpp>)",
-                    "find_package(Boost REQUIRED COMPONENTS filesystem)\ntarget_link_libraries(${EXECUTABLE_NAME} ${Boost_LIBRARIES})" },
-=======
 )",
                     "Qt5::Widgets"},
         { R"(\s*#include\s*<openssl/ssl.h>)",
                     "find_package(OpenSSL REQUIRED)\n",
                     "${OPENSSL_LIBRARIES}" },
->>>>>>> rulesfile
     };
     std::smatch sm;
     for (const auto &rule : rules) {
