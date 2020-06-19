@@ -1,4 +1,3 @@
 #!/bin/bash
-for mdfile in examples/*.md ; do
-    autoproject "$mdfile"
-done
+# create the project from the passed md file and return 0 if OK
+@autoproject@ -f "$1" 
