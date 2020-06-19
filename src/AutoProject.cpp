@@ -330,7 +330,14 @@ set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTOUIC ON)
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
 )",
-                    "Qt5::Widgets"},
+                    "Qt5::Widgets Qt5::Core"},
+        { R"(\s*#include\s*<QWidget>)",
+                    R"(find_package(Qt5Widgets)
+set(CMAKE_AUTOMOC ON)
+set(CMAKE_AUTOUIC ON)
+set(CMAKE_INCLUDE_CURRENT_DIR ON)
+)",
+                    "Qt5::Widgets Qt5::Core"},
         { R"(\s*#include\s*<openssl/ssl.h>)",
                     "find_package(OpenSSL REQUIRED)\n",
                     "${OPENSSL_LIBRARIES}" },
