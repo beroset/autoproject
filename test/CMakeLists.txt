@@ -13,6 +13,7 @@ add_test(adjlist createExamples.sh ${CMAKE_CURRENT_SOURCE_DIR}/examples/adjlist.
 add_test(foo createExamples.sh ${CMAKE_CURRENT_SOURCE_DIR}/examples/foo.md)
 add_test(llist26 createExamples.sh ${CMAKE_CURRENT_SOURCE_DIR}/examples/llist26.md)
 add_test(mandel2 createExamples.sh ${CMAKE_CURRENT_SOURCE_DIR}/examples/mandel2.md)
+add_test(minefield createExamples.sh ${CMAKE_CURRENT_SOURCE_DIR}/examples/minefield.md)
 add_test(mop createExamples.sh ${CMAKE_CURRENT_SOURCE_DIR}/examples/mop.md)
 add_test(ms2 createExamples.sh ${CMAKE_CURRENT_SOURCE_DIR}/examples/ms2.md)
 add_test(ms createExamples.sh ${CMAKE_CURRENT_SOURCE_DIR}/examples/ms.md)
