@@ -1,3 +1,4 @@
+#include <config.h>
 #include "AutoProject.h"
 #include <unordered_set>
 #include <algorithm>
@@ -7,12 +8,27 @@
 
 using namespace std::literals;
 
-const std::string AutoProject::mdextension{".md"};
-constexpr std::string_view cmakeVersion{"VERSION 3.1"};
+// local constants
+static const std::string mdextension{".md"};
+static constexpr std::string_view cmakeVersion{"VERSION 3.1"};
+static constexpr unsigned indentLevel{4};
+static constexpr unsigned delimLength{3};
+
+// helper functions
 static std::string& trim(std::string& str, const std::string_view pattern);
 static std::string& rtrim(std::string& str, const std::string_view pattern);
 static std::string& trim(std::string& str, char ch);
 static std::string& rtrim(std::string& str, char ch);
+static std::string trimExtras(std::string& line);
+static bool isNonEmptyIndented(const std::string& line);
+static bool isIndentedOrEmpty(const std::string& line);
+static bool isEmptyOrUnderline(const std::string& line);
+static bool isDelimited(const std::string& line);
+static bool isSourceExtension(const std::string_view ext);
+static bool isSourceFilename(std::string &line);
+static std::string &replaceLeadingTabs(std::string &line);
+static void emit(std::ostream& out, const std::string &line);
+static void emitVerbatim(std::ostream& out, const std::string &line);
 
 void AutoProject::open(fs::path mdFilename)  {
     AutoProject ap(mdFilename);
@@ -34,14 +50,9 @@ AutoProject::AutoProject(fs::path mdFilename) :
 }
 
 /// returns true if passed file extension is an identified source code extension.
-bool isSourceExtension(const std::string &ext) {
+bool isSourceExtension(const std::string_view ext) {
     static const std::unordered_set<std::string_view> source_extensions{".cpp", ".c", ".h", ".hpp"};
     return source_extensions.find(ext) != source_extensions.end();
-}
-
-void AutoProject::copyFile() const {
-    // copy md file to projname/src
-    fs::copy_file(mdfile, srcdir + "/" + projname + mdextension);
 }
 
 /*
@@ -52,7 +63,7 @@ void AutoProject::copyFile() const {
  * indented flavor.  As a result, this code is modified to also accept
  * that syntax as of April 2019.
  */
-bool AutoProject::createProject() {
+bool AutoProject::createProject(bool overwrite) {
     std::string prevline;
     bool inIndentedFile{false};
     bool inDelimitedFile{false};
@@ -92,7 +103,7 @@ bool AutoProject::createProject() {
                     srcfilename = fs::path(srcdir) / "main.cpp";
                 }
                 if (firstFile) {
-                    makeTree();
+                    makeTree(overwrite);
                     firstFile = false;
                 }
                 srcfile.open(srcfilename);
@@ -104,7 +115,7 @@ bool AutoProject::createProject() {
                 // if previous line was filename, open that file and start writing
                 if (isSourceFilename(prevline)) {
                     if (firstFile) {
-                        makeTree();
+                        makeTree(overwrite);
                         firstFile = false;
                     }
                     srcfilename = fs::path(srcdir) / prevline;
@@ -116,7 +127,7 @@ bool AutoProject::createProject() {
                         inIndentedFile = true;
                     }
                 } else if (firstFile && !line.empty()) {  // un-named source file
-                    makeTree();
+                    makeTree(overwrite);
                     firstFile = false;
                     srcfilename = fs::path(srcdir) / "main.cpp";
                     srcfile.open(srcfilename);
@@ -137,20 +148,16 @@ bool AutoProject::createProject() {
     if (!srcnames.empty()) {
         writeSrcLevel();
         writeTopLevel();
-        copyFile();
+        // copy md file to projname/src
+        fs::copy_file(mdfile, srcdir + "/" + projname + mdextension);
     }
     return !srcnames.empty();
 }
 
-void AutoProject::makeTree() {
-    if (fs::exists(projname)) {
+void AutoProject::makeTree(bool overwrite) {
+    if (fs::exists(projname) && !overwrite) {
         throw std::runtime_error(projname + " already exists: will not overwrite.");
     }
-    /*
-     * I would have used create_directories here, but there appears to be a bug
-     * in it that didn't exist in the experimental/filesystem version.
-     * Sill tracking that down, but this will do for now.
-     */
     if (!fs::create_directories(srcdir)) {
         throw std::runtime_error("Cannot create directory "s + srcdir);
     }
@@ -191,13 +198,12 @@ std::string& rtrim(std::string& str, char ch) {
     return str;
 }
 
-bool AutoProject::isSourceFilename(std::string& line) const {
+bool isSourceFilename(std::string &line) {
     trimExtras(line);
     return isSourceExtension(fs::path(line).extension().string());
 }
 
-std::string AutoProject::trimExtras(std::string& line) const
-{
+std::string trimExtras(std::string& line) {
     if (line.empty()) {
         return line;
     }
@@ -225,15 +231,21 @@ void AutoProject::writeSrcLevel() const {
     // TODO: the add_executable line needs to be *after* "set(CMAKE_AUTOMOC ON)" but before "target_link_libraries..."
     srccmake <<
             "cmake_minimum_required(" << cmakeVersion << ")\n"
-            "set(EXECUTABLE_NAME \"" << projname << "\")\n"
+            "set(EXECUTABLE_NAME \"" << projname << "\")\n";
+    for (const auto &rule : extraRules) {
+        srccmake << rule << '\n';
+    }
+    srccmake <<
             "add_executable(${EXECUTABLE_NAME}";
     for (const auto& fn : srcnames) {
         srccmake << ' ' << fn;
     }
-    srccmake << ")\n";
-    for (const auto &rule : extraRules) {
-        srccmake << rule << '\n';
+    srccmake <<
+            ")\ntarget_link_libraries(${EXECUTABLE_NAME} ";
+    for (const auto &lib : libraries) {
+        srccmake << lib << ' ';
     }
+    srccmake << ")\n";
     srccmake.close();
 }
 
@@ -254,8 +266,10 @@ void AutoProject::checkRules(const std::string &line) {
     static const struct Rule {
         const std::regex re;
         const std::string cmake;
-        Rule(std::string reg, std::string result) : re{reg}, cmake{result} {}
+        const std::string libraries;
+        Rule(std::string reg, std::string result, std::string libraries) : re{reg}, cmake{result}, libraries{libraries} {}
     } rules[]{
+<<<<<<< HEAD
         { R"(\s*#include\s*<(experimental/)?filesystem>)",
             "if (\"${CMAKE_CXX_COMPILER_ID}\" STREQUAL \"GNU\")\n"
             "  target_link_libraries(${EXECUTABLE_NAME} stdc++fs)\n"
@@ -294,18 +308,60 @@ target_link_libraries(${EXECUTABLE_NAME} ${OPENGL_LIBRARIES} ${GLUT_LIBRARIES}))
                     "find_package(PNG REQUIRED)\ntarget_link_libraries(${EXECUTABLE_NAME} ${PNG_LIBRARIES})" },
         { R"(\s*#include\s*<ncurses.h>)",
                     "find_package(Curses REQUIRED)\ntarget_link_libraries(${EXECUTABLE_NAME} ${CURSES_LIBRARIES})" },
+=======
+        { R"(\s*#include\s*<(experimental/)?filesystem>)","",
+            "stdc++fs" },
+        { R"(\s*#include\s*<thread>)", "find_package(Threads REQUIRED)\n",
+                "${CMAKE_THREAD_LIBS_INIT}"},
+        { R"(\s*#include\s*<future>)", "find_package(Threads REQUIRED)\n",
+                "${CMAKE_THREAD_LIBS_INIT}"},
+        { R"(\s*#include\s*<SFML/Graphics.hpp>)",
+                    "find_package(SFML REQUIRED COMPONENTS System Window Graphics)\n"
+                    "include_directories(${SFML_INCLUDE_DIR})\n",
+                    "${SFML_LIBRARIES}"},
+        { R"(\s*#include\s*<GL/glew.h>)",
+                    "find_package(GLEW REQUIRED)\n",
+                    "${GLEW_LIBRARIES}" },
+        { R"(\s*#include\s*<GL/glut.h>)",
+                    "find_package(GLUT REQUIRED)\n"
+                    "find_package(OpenGL REQUIRED)\n",
+                    "${OPENGL_LIBRARIES} ${GLUT_LIBRARIES}" },
+        { R"(\s*#include\s*<OpenGL/gl.h>)",
+                    "find_package(OpenGL REQUIRED)\n",
+                    "${OPENGL_LIBRARIES}" },
+        { R"(\s*#include\s*<SDL2/SDL.h>)",
+                    "find_package(SDL2 REQUIRED)\n",
+                    "${SDL2_LIBRARIES}" },
+        // the SDL2_ttf.cmake package doesn't yet ship with CMake
+        { R"(\s*#include\s*<SDL2/SDL_ttf.h>)",
+                    "find_package(SDL2_ttf REQUIRED)\n",
+                    "${SDL2_TTF_LIBRARIES}" },
+        { R"(\s*#include\s*<GLFW/glfw3.h>)",
+                    "find_package(glfw3 REQUIRED)\n",
+                    "glfw" },
+        { R"(\s*#include\s*<boost/regex.hpp>)",
+                    "find_package(Boost REQUIRED COMPONENTS regex)\n",
+                    "${Boost_LIBRARIES}" },
+        { R"(\s*#include\s*<png.h>)",
+                    "find_package(PNG REQUIRED)\n",
+                    "${PNG_LIBRARIES}" },
+        { R"(\s*#include\s*<ncurses.h>)",
+                    "find_package(Curses REQUIRED)\n",
+                    "${CURSES_LIBRARIES}" },
+>>>>>>> rulesfile
         { R"(\s*#include\s*<SDL2.SDL.h>)",
             R"(include(FindPkgConfig)
 PKG_SEARCH_MODULE(SDL2 REQUIRED sdl2)
 INCLUDE_DIRECTORIES(${SDL2_INCLUDE_DIRS})
-TARGET_LINK_LIBRARIES(${EXECUTABLE_NAME} ${SDL2_LIBRARIES})
-)" },
+)",
+                    "${SDL2_LIBRARIES}" },
         // experimental support for Qt5; not sure if Widgets is correct
         { R"(\s*#include\s*<QString>)",
                     R"(find_package(Qt5Widgets)
 set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTOUIC ON)
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
+<<<<<<< HEAD
 message(FATAL_ERROR "You must move the 'add_executable' here and delete this line")
 target_link_libraries(${EXECUTABLE_NAME} "Qt5::Widgets")
 )" },
@@ -313,31 +369,39 @@ target_link_libraries(${EXECUTABLE_NAME} "Qt5::Widgets")
                     "find_package(OpenSSL REQUIRED)\ntarget_link_libraries(${EXECUTABLE_NAME} ${OPENSSL_LIBRARIES})" },
         { R"(\s*#include\s*<boost/filesystem.hpp>)",
                     "find_package(Boost REQUIRED COMPONENTS filesystem)\ntarget_link_libraries(${EXECUTABLE_NAME} ${Boost_LIBRARIES})" },
+=======
+)",
+                    "Qt5::Widgets"},
+        { R"(\s*#include\s*<openssl/ssl.h>)",
+                    "find_package(OpenSSL REQUIRED)\n",
+                    "${OPENSSL_LIBRARIES}" },
+>>>>>>> rulesfile
     };
     std::smatch sm;
     for (const auto &rule : rules) {
         if (std::regex_search(line, sm, rule.re)) {
             extraRules.emplace(rule.cmake);
+            libraries.emplace(rule.libraries);
         }
     }
 }
 
-bool AutoProject::isNonEmptyIndented(const std::string& line) const {
+bool isNonEmptyIndented(const std::string& line) {
     size_t indent{line.find_first_not_of(' ')};
     return indent >= indentLevel && indent != std::string::npos;
 }
 
-bool AutoProject::isIndentedOrEmpty(const std::string& line) const {
+bool isIndentedOrEmpty(const std::string& line) {
     size_t indent{line.find_first_not_of(' ')};
     return indent >= indentLevel;
 }
 
-bool AutoProject::isEmptyOrUnderline(const std::string& line) const {
+bool isEmptyOrUnderline(const std::string& line) {
     size_t indent{line.find_first_not_of('-')};
     return line.empty() || indent == std::string::npos;
 }
 
-bool AutoProject::isDelimited(const std::string& line) const {
+bool isDelimited(const std::string& line) {
     if (line.empty() || (line[0] != '`' && line[0] != '~')) {
         return false;
     }
@@ -346,7 +410,7 @@ bool AutoProject::isDelimited(const std::string& line) const {
     return backtickDelim >= delimLength || tildeDelim >= delimLength;
 }
 
-std::string &AutoProject::replaceLeadingTabs(std::string &line) const {
+std::string &replaceLeadingTabs(std::string &line) {
     std::size_t tabcount{0};
     for (auto ch: line) {
         if (ch != '\t')
@@ -359,7 +423,7 @@ std::string &AutoProject::replaceLeadingTabs(std::string &line) const {
     return line;
 }
 
-void AutoProject::emit(std::ostream& out, const std::string &line) const {
+static void emit(std::ostream& out, const std::string &line) {
     if (line.size() < indentLevel) {
         out << line << '\n';
     } else {
@@ -367,7 +431,7 @@ void AutoProject::emit(std::ostream& out, const std::string &line) const {
     }
 }
 
-void AutoProject::emitVerbatim(std::ostream& out, const std::string &line) const {
+void emitVerbatim(std::ostream& out, const std::string &line) {
     out << line << '\n';
 }
 
