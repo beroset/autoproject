@@ -1,12 +1,13 @@
 #ifndef AUTOPROJECT_H
 #define AUTOPROJECT_H
+#include <exception>
+#include <filesystem>
+#include <fstream>
+#include <functional>
 #include <string>
 #include <string_view>
-#include <fstream>
 #include <unordered_set>
-#include <exception>
-#include <functional>
-#include <filesystem>
+
 namespace fs = std::filesystem;
 
 struct path_hash {

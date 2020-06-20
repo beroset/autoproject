@@ -4,12 +4,14 @@
 #include <algorithm>
 #include <iostream>
 #include <regex>
+#include <vector>
 #include <string_view>
 
 using namespace std::literals;
 
 // local constants
 static const std::string mdextension{".md"};
+static const std::string rulesfilename{DATAFILE_DIR "/config/rules.txt"};
 static constexpr std::string_view cmakeVersion{"VERSION 3.1"};
 static constexpr unsigned indentLevel{4};
 static constexpr unsigned delimLength{3};
@@ -29,6 +31,51 @@ static bool isSourceFilename(std::string &line);
 static std::string &replaceLeadingTabs(std::string &line);
 static void emit(std::ostream& out, const std::string &line);
 static void emitVerbatim(std::ostream& out, const std::string &line);
+
+// local definitions
+static const std::regex newline{R"(\\n)"};
+
+struct Rule {
+    const std::regex re;
+    const std::string cmake;
+    const std::string libraries;
+    Rule(std::string reg, std::string result, std::string libraries) : re{reg}, 
+        cmake{std::regex_replace(result, newline, "\n")},
+        libraries{libraries} {
+    }
+};
+
+static std::vector<Rule> loadrules(const std::string &rulesfile) {
+    std::vector<Rule> rules;
+    std::ifstream in(rulesfile);
+    if (!in) {
+        std::cerr << "Unable to open rules file: " << rulesfile << "\n";
+        return rules;
+    }
+    std::string line;
+    unsigned linenum{0};
+    static const std::regex rulefields{"([^@]+)@([^@]*)@(.*)"}; //([^@]*)@([^@]*)"};
+    while (std::getline(in, line)) {
+        ++linenum;
+        std::smatch pieces;
+        if (std::regex_match(line, pieces, rulefields) && pieces.size() == 4) {
+            try {
+                rules.emplace_back(pieces[1], pieces[2], pieces[3]);
+            } 
+            catch (std::regex_error& e) {
+                std::string_view labels[]{"line", "regex", "cmake lines", "libraries"};
+                std::cerr << "Error: " << e.what() << " in line " << linenum << " of rules file " << rulesfile << "\n";
+                for (unsigned i{0}; i < pieces.size(); ++i ) {
+                    std::cout << labels[i] << " = \"" << pieces[i] << "\"\n";
+                }
+            }
+        }
+    }
+    std::cout << "Loaded " << rules.size() << " rules\n";
+    return rules;
+}
+
+static std::vector<Rule> rules{loadrules(rulesfilename)};
 
 void AutoProject::open(fs::path mdFilename)  {
     AutoProject ap(mdFilename);
@@ -247,9 +294,9 @@ void AutoProject::writeSrcLevel() const {
         srccmake << ' ' << fn;
     }
     srccmake <<
-            ")\ntarget_link_libraries(${EXECUTABLE_NAME} ";
+            ")\ntarget_link_libraries(${EXECUTABLE_NAME}";
     for (const auto &lib : libraries) {
-        srccmake << lib << ' ';
+        srccmake << ' ' << lib;
     }
     srccmake << ")\n";
     srccmake.close();
@@ -268,80 +315,6 @@ void AutoProject::writeTopLevel() const {
 }
 
 void AutoProject::checkRules(const std::string &line) {
-    // TODO: provide mechanism to load rules from file(s)
-    static const struct Rule {
-        const std::regex re;
-        const std::string cmake;
-        const std::string libraries;
-        Rule(std::string reg, std::string result, std::string libraries) : re{reg}, cmake{result}, libraries{libraries} {}
-    } rules[]{
-        { R"(\s*#include\s*<(experimental/)?filesystem>)","",
-            "stdc++fs" },
-        { R"(\s*#include\s*<thread>)", "find_package(Threads REQUIRED)\n",
-                "${CMAKE_THREAD_LIBS_INIT}"},
-        { R"(\s*#include\s*<future>)", "find_package(Threads REQUIRED)\n",
-                "${CMAKE_THREAD_LIBS_INIT}"},
-        { R"(\s*#include\s*<SFML/Graphics.hpp>)",
-                    "find_package(SFML REQUIRED COMPONENTS System Window Graphics)\n"
-                    "include_directories(${SFML_INCLUDE_DIR})\n",
-                    "${SFML_LIBRARIES}"},
-        { R"(\s*#include\s*<GL/glew.h>)",
-                    "find_package(GLEW REQUIRED)\n",
-                    "${GLEW_LIBRARIES}" },
-        { R"(\s*#include\s*<GL/glut.h>)",
-                    "find_package(GLUT REQUIRED)\n"
-                    "find_package(OpenGL REQUIRED)\n",
-                    "${OPENGL_LIBRARIES} ${GLUT_LIBRARIES}" },
-        { R"(\s*#include\s*<OpenGL/gl.h>)",
-                    "find_package(OpenGL REQUIRED)\n",
-                    "${OPENGL_LIBRARIES}" },
-        { R"(\s*#include\s*<opencv2/opencv.hpp>)",
-                    "find_package(OpenCV REQUIRED)\n",
-                    "${OpenCV_LIBRARIES}" },
-        // the SDL2_ttf.cmake package doesn't yet ship with CMake
-        { R"(\s*#include\s*<SDL2/SDL_ttf.h>)",
-                    "find_package(SDL2_ttf REQUIRED)\n",
-                    "${SDL2_TTF_LIBRARIES}" },
-        { R"(\s*#include\s*<GLFW/glfw3.h>)",
-                    "find_package(glfw3 REQUIRED)\n",
-                    "glfw" },
-        { R"(\s*#include\s*<boost/regex.hpp>)",
-                    "find_package(Boost REQUIRED COMPONENTS regex)\n",
-                    "${Boost_LIBRARIES}" },
-        { R"(\s*#include\s*<boost/filesystem.hpp>)",
-                    "find_package(Boost REQUIRED COMPONENTS filesystem)\n",
-                    "${Boost_LIBRARIES}" },
-        { R"(\s*#include\s*<png.h>)",
-                    "find_package(PNG REQUIRED)\n",
-                    "${PNG_LIBRARIES}" },
-        { R"(\s*#include\s*<ncurses.h>)",
-                    "find_package(Curses REQUIRED)\n",
-                    "${CURSES_LIBRARIES}" },
-        { R"(\s*#include\s*<SDL2.SDL.h>)",
-            R"(include(FindPkgConfig)
-PKG_SEARCH_MODULE(SDL2 REQUIRED sdl2)
-INCLUDE_DIRECTORIES(${SDL2_INCLUDE_DIRS})
-)",
-                    "${SDL2_LIBRARIES}" },
-        // experimental support for Qt5; not sure if Widgets is correct
-        { R"(\s*#include\s*<QString>)",
-                    R"(find_package(Qt5Widgets)
-set(CMAKE_AUTOMOC ON)
-set(CMAKE_AUTOUIC ON)
-set(CMAKE_INCLUDE_CURRENT_DIR ON)
-)",
-                    "Qt5::Widgets Qt5::Core"},
-        { R"(\s*#include\s*<QWidget>)",
-                    R"(find_package(Qt5Widgets)
-set(CMAKE_AUTOMOC ON)
-set(CMAKE_AUTOUIC ON)
-set(CMAKE_INCLUDE_CURRENT_DIR ON)
-)",
-                    "Qt5::Widgets Qt5::Core"},
-        { R"(\s*#include\s*<openssl/ssl.h>)",
-                    "find_package(OpenSSL REQUIRED)\n",
-                    "${OPENSSL_LIBRARIES}" },
-    };
     std::smatch sm;
     for (const auto &rule : rules) {
         if (std::regex_search(line, sm, rule.re)) {

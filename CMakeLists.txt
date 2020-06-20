@@ -36,5 +36,5 @@ if (WITH_TEST)
 endif() 
 
 INCLUDE(InstallRequiredSystemLibraries)
-#INSTALL(DIRECTORY dict DESTINATION share/words)
+INSTALL(DIRECTORY config DESTINATION share/autoproject)
 include(CPack)
