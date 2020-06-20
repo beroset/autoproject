@@ -9,13 +9,17 @@
 
 using namespace std::literals;
 
-// local constants
-static const std::string mdextension{".md"};
-static const std::string rulesfilename{DATAFILE_DIR "/config/rules.txt"};
-static const std::string toplevelfilename{DATAFILE_DIR "/config/toplevel.cmake.txt"};
-static constexpr std::string_view cmakeVersion{"VERSION 3.1"};
-static constexpr unsigned indentLevel{4};
-static constexpr unsigned delimLength{3};
+// local definitions
+struct Rule {
+    const std::regex re;
+    const std::string cmake;
+    const std::string libraries;
+    static const std::regex newline;
+    Rule(std::string reg, std::string result, std::string libraries) : re{reg}, 
+        cmake{std::regex_replace(result, newline, "\n")},
+        libraries{libraries} {
+    }
+};
 
 // helper functions
 static std::string& trim(std::string& str, const std::string_view pattern);
@@ -31,53 +35,20 @@ static bool isSourceExtension(const std::string_view ext);
 static bool isSourceFilename(std::string &line);
 static std::string &replaceLeadingTabs(std::string &line);
 static void emit(std::ostream& out, const std::string &line);
-static void emitVerbatim(std::ostream& out, const std::string &line);
+static std::vector<Rule> loadrules(const std::string &rulesfile);
 
-// local definitions
-static const std::regex newline{R"(\\n)"};
+// local constants
+static const std::string mdextension{".md"};
+static const std::string rulesfilename{DATAFILE_DIR "/config/rules.txt"};
+static const std::string toplevelfilename{DATAFILE_DIR "/config/toplevel.cmake.txt"};
+static constexpr std::string_view cmakeVersion{"VERSION 3.1"};
+static constexpr unsigned indentLevel{4};
+static constexpr unsigned delimLength{3};
+static const std::vector<Rule> rules{loadrules(rulesfilename)};
+const std::regex Rule::newline{R"(\\n)"};
 
-struct Rule {
-    const std::regex re;
-    const std::string cmake;
-    const std::string libraries;
-    Rule(std::string reg, std::string result, std::string libraries) : re{reg}, 
-        cmake{std::regex_replace(result, newline, "\n")},
-        libraries{libraries} {
-    }
-};
 
-static std::vector<Rule> loadrules(const std::string &rulesfile) {
-    std::vector<Rule> rules;
-    std::ifstream in(rulesfile);
-    if (!in) {
-        std::cerr << "Unable to open rules file: " << rulesfile << "\n";
-        return rules;
-    }
-    std::string line;
-    unsigned linenum{0};
-    static const std::regex rulefields{"([^@]+)@([^@]*)@(.*)"}; 
-    while (std::getline(in, line)) {
-        ++linenum;
-        std::smatch pieces;
-        if (std::regex_match(line, pieces, rulefields) && pieces.size() == 4) {
-            try {
-                rules.emplace_back(pieces[1], pieces[2], pieces[3]);
-            } 
-            catch (std::regex_error& e) {
-                std::string_view labels[]{"line", "regex", "cmake lines", "libraries"};
-                std::cerr << "Error: " << e.what() << " in line " << linenum << " of rules file " << rulesfile << "\n";
-                for (unsigned i{0}; i < pieces.size(); ++i ) {
-                    std::cout << labels[i] << " = \"" << pieces[i] << "\"\n";
-                }
-            }
-        }
-    }
-    std::cout << "Loaded " << rules.size() << " rules\n";
-    return rules;
-}
-
-static std::vector<Rule> rules{loadrules(rulesfilename)};
-
+// AutoProject interface functions
 void AutoProject::open(fs::path mdFilename)  {
     AutoProject ap(mdFilename);
     std::swap(ap, *this);
@@ -87,7 +58,7 @@ AutoProject::AutoProject(fs::path mdFilename) :
     mdfile{mdFilename},
     projname{mdfile.stem().string()},
     srcdir{projname + "/src"},
-    in(mdfile)
+    in{mdfile}
 {
     if (mdfile.extension() != mdextension) {
         throw FileExtensionException("Input file must have " + mdextension + " extension");
@@ -95,12 +66,6 @@ AutoProject::AutoProject(fs::path mdFilename) :
     if (!in) {
         throw std::runtime_error("Cannot open input file "s + mdfile.string());
     }
-}
-
-/// returns true if passed file extension is an identified source code extension.
-bool isSourceExtension(const std::string_view ext) {
-    static const std::unordered_set<std::string_view> source_extensions{".cpp", ".c", ".h", ".hpp"};
-    return source_extensions.find(ext) != source_extensions.end();
 }
 
 /*
@@ -140,7 +105,7 @@ bool AutoProject::createProject(bool overwrite) {
                 inDelimitedFile = false;
             } else {
                 checkRules(line);
-                emitVerbatim(srcfile, line);
+                srcfile << line << '\n';
             }
         } else {
             if (isDelimited(line)) {
@@ -218,6 +183,67 @@ void AutoProject::makeTree(bool overwrite) {
     }
 }
 
+void AutoProject::writeSrcLevel() const {
+    // write CMakeLists.txt with filenames to projname/src
+    std::ofstream srccmake(srcdir + "/CMakeLists.txt");
+    srccmake <<
+            "cmake_minimum_required(" << cmakeVersion << ")\n"
+            "set(EXECUTABLE_NAME \"" << projname << "\")\n";
+    for (const auto &rule : extraRules) {
+        srccmake << rule << '\n';
+    }
+    srccmake <<
+            "add_executable(${EXECUTABLE_NAME}";
+    for (const auto& fn : srcnames) {
+        srccmake << ' ' << fn;
+    }
+    srccmake <<
+            ")\ntarget_link_libraries(${EXECUTABLE_NAME}";
+    for (const auto &lib : libraries) {
+        srccmake << ' ' << lib;
+    }
+    srccmake << ")\n";
+    srccmake.close();
+}
+
+void AutoProject::writeTopLevel() const {
+    static const std::regex projname_regex{"[{]projname[}]"};
+    std::ifstream in{toplevelfilename};
+    if (!in) {
+        std::cerr << "Error: cannot open top level filename \"" << toplevelfilename << "\"\n";
+        exit(1);
+    }
+    std::ofstream topcmake{projname + "/CMakeLists.txt"};
+    std::string line;
+    while (std::getline(in, line)) {
+        topcmake << std::regex_replace(line, projname_regex, projname) << '\n';
+    }
+}
+
+void AutoProject::checkRules(const std::string &line) {
+    std::smatch sm;
+    for (const auto &rule : rules) {
+        if (std::regex_search(line, sm, rule.re)) {
+            extraRules.emplace(rule.cmake);
+            libraries.emplace(rule.libraries);
+        }
+    }
+}
+
+std::ostream& operator<<(std::ostream& out, const AutoProject &ap) {
+    out << "Successfully extracted the following source files:\n";
+    std::copy(ap.srcnames.begin(), ap.srcnames.end(), std::ostream_iterator<fs::path>(out, "\n"));
+    return out;
+}
+
+// helper functions
+
+/// returns true if passed file extension is an identified source code extension.
+bool isSourceExtension(const std::string_view ext) {
+    static const std::unordered_set<std::string_view> source_extensions{".cpp", ".c", ".h", ".hpp"};
+    return source_extensions.find(ext) != source_extensions.end();
+}
+
 std::string& trim(std::string& str, const std::string_view pattern) {
     // TODO: when we get C++20, use std::string::starts_with()
     if (str.find(pattern) == 0) {
@@ -279,53 +305,6 @@ std::string trimExtras(std::string& line) {
     return line;
 }
 
-void AutoProject::writeSrcLevel() const {
-    // write CMakeLists.txt with filenames to projname/src
-    std::ofstream srccmake(srcdir + "/CMakeLists.txt");
-    srccmake <<
-            "cmake_minimum_required(" << cmakeVersion << ")\n"
-            "set(EXECUTABLE_NAME \"" << projname << "\")\n";
-    for (const auto &rule : extraRules) {
-        srccmake << rule << '\n';
-    }
-    srccmake <<
-            "add_executable(${EXECUTABLE_NAME}";
-    for (const auto& fn : srcnames) {
-        srccmake << ' ' << fn;
-    }
-    srccmake <<
-            ")\ntarget_link_libraries(${EXECUTABLE_NAME}";
-    for (const auto &lib : libraries) {
-        srccmake << ' ' << lib;
-    }
-    srccmake << ")\n";
-    srccmake.close();
-}
-
-void AutoProject::writeTopLevel() const {
-    static const std::regex projname_regex{"[{]projname[}]"};
-    std::ifstream in{toplevelfilename};
-    if (!in) {
-        std::cerr << "Error: cannot open top level filename \"" << toplevelfilename << "\"\n";
-        exit(1);
-    }
-    std::ofstream topcmake{projname + "/CMakeLists.txt"};
-    std::string line;
-    while (std::getline(in, line)) {
-        topcmake << std::regex_replace(line, projname_regex, projname) << '\n';
-    }
-}
-
-void AutoProject::checkRules(const std::string &line) {
-    std::smatch sm;
-    for (const auto &rule : rules) {
-        if (std::regex_search(line, sm, rule.re)) {
-            extraRules.emplace(rule.cmake);
-            libraries.emplace(rule.libraries);
-        }
-    }
-}
-
 bool isNonEmptyIndented(const std::string& line) {
     size_t indent{line.find_first_not_of(' ')};
     return indent >= indentLevel && indent != std::string::npos;
@@ -363,7 +342,7 @@ std::string &replaceLeadingTabs(std::string &line) {
     return line;
 }
 
-static void emit(std::ostream& out, const std::string &line) {
+void emit(std::ostream& out, const std::string &line) {
     if (line.size() < indentLevel) {
         out << line << '\n';
     } else {
@@ -371,12 +350,32 @@ static void emit(std::ostream& out, const std::string &line) {
     }
 }
 
-void emitVerbatim(std::ostream& out, const std::string &line) {
-    out << line << '\n';
-}
-
-std::ostream& operator<<(std::ostream& out, const AutoProject &ap) {
-    out << "Successfully extracted the following source files:\n";
-    std::copy(ap.srcnames.begin(), ap.srcnames.end(), std::ostream_iterator<fs::path>(out, "\n"));
-    return out;
+std::vector<Rule> loadrules(const std::string &rulesfile) {
+    std::vector<Rule> rules;
+    std::ifstream in(rulesfile);
+    if (!in) {
+        std::cerr << "Unable to open rules file: " << rulesfile << "\n";
+        return rules;
+    }
+    std::string line;
+    unsigned linenum{0};
+    static const std::regex rulefields{"([^@]+)@([^@]*)@(.*)"}; 
+    while (std::getline(in, line)) {
+        ++linenum;
+        std::smatch pieces;
+        if (std::regex_match(line, pieces, rulefields) && pieces.size() == 4) {
+            try {
+                rules.emplace_back(pieces[1], pieces[2], pieces[3]);
+            } 
+            catch (std::regex_error& e) {
+                static constexpr std::string_view labels[4]{"line", "regex", "cmake lines", "libraries"};
+                std::cerr << "Error: " << e.what() << " in line " << linenum << " of rules file " << rulesfile << "\n";
+                for (unsigned i{0}; i < pieces.size(); ++i ) {
+                    std::cout << labels[i] << " = \"" << pieces[i] << "\"\n";
+                }
+            }
+        }
+    }
+    std::cout << "Loaded " << rules.size() << " rules\n";
+    return rules;
 }

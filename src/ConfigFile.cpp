@@ -8,6 +8,10 @@
 #include <regex>
 #include <filesystem>
 
+static const std::regex comment_regex{R"x(\s*[;#].*)x"};
+static const std::regex section_regex{R"x(\s*\[([^\]]+)\]\s*)x"};
+static const std::regex value_regex{R"x(\s*(\S[^ \t=]*)\s*=\s*((\s?\S+)+)\s*)x"};
+
 ConfigFile::ConfigFile(const std::string& filename)
 : map{} {
     std::ifstream fstrm;
@@ -20,16 +24,12 @@ ConfigFile::ConfigFile(std::istream& in) : map{} {
 }
 
 void ConfigFile::parse(std::istream& in) {
-    static const std::regex comment_regex{R"x(\s*[;#]$)x"};
-    static const std::regex section_regex{R"x(\s*\[([^\]]+)\])x"};
-    static const std::regex value_regex{R"x(\s*(\S[^ \t=]*)\s*=\s*((\s?\S+)+)\s*$)x"};
     std::string current_section;
     std::smatch pieces;
     for (std::string line; std::getline(in, line);)
     {
         if (line.empty() || std::regex_match(line, pieces, comment_regex)) {
             // skip comment lines and blank lines
-                
         }
         else if (std::regex_match(line, pieces, section_regex)) {
             if (pieces.size() == 2) { // exactly one match
@@ -45,9 +45,6 @@ void ConfigFile::parse(std::istream& in) {
 }
 
 bool ConfigFile::rewrite(const std::string& filename) const {
-    static const std::regex comment_regex{R"x(\s*[;#].*)x"};
-    static const std::regex section_regex{R"x(\s*\[([^\]]+)\]\s*)x"};
-    static const std::regex value_regex{R"x(\s*(\S[^ \t=]*)\s*=\s*((\s?\S+)+)\s*)x"};
     static const std::string suffix{".swp"};
     std::string current_section;
     std::smatch pieces;
@@ -147,4 +144,14 @@ void ConfigFile::delete_section(const std::string& sectionname) {
     if (sect != map.end()) {
         map.erase(sect);
     }
+}
+
+std::ostream& operator<<(std::ostream& out, const ConfigFile& cfg) {
+    for (const auto &sect : cfg.map) {
+        out << "[" << sect.first << "]\n";
+        for (const auto &item : sect.second) {
+            out << '\t' << item.first << " = " << item.second << '\n';
+        }
+    }
+    return out;
 }
