@@ -12,6 +12,7 @@ using namespace std::literals;
 // local constants
 static const std::string mdextension{".md"};
 static const std::string rulesfilename{DATAFILE_DIR "/config/rules.txt"};
+static const std::string toplevelfilename{DATAFILE_DIR "/config/toplevel.cmake.txt"};
 static constexpr std::string_view cmakeVersion{"VERSION 3.1"};
 static constexpr unsigned indentLevel{4};
 static constexpr unsigned delimLength{3};
@@ -54,7 +55,7 @@ static std::vector<Rule> loadrules(const std::string &rulesfile) {
     }
     std::string line;
     unsigned linenum{0};
-    static const std::regex rulefields{"([^@]+)@([^@]*)@(.*)"}; //([^@]*)@([^@]*)"};
+    static const std::regex rulefields{"([^@]+)@([^@]*)@(.*)"}; 
     while (std::getline(in, line)) {
         ++linenum;
         std::smatch pieces;
@@ -281,7 +282,6 @@ std::string trimExtras(std::string& line) {
 void AutoProject::writeSrcLevel() const {
     // write CMakeLists.txt with filenames to projname/src
     std::ofstream srccmake(srcdir + "/CMakeLists.txt");
-    // TODO: the add_executable line needs to be *after* "set(CMAKE_AUTOMOC ON)" but before "target_link_libraries..."
     srccmake <<
             "cmake_minimum_required(" << cmakeVersion << ")\n"
             "set(EXECUTABLE_NAME \"" << projname << "\")\n";
@@ -303,15 +303,17 @@ void AutoProject::writeSrcLevel() const {
 }
 
 void AutoProject::writeTopLevel() const {
-    // TODO: use replaceable boilerplate in a config file
-    // write CMakeLists.txt top level to projname
-    std::ofstream topcmake(projname + "/CMakeLists.txt");
-    topcmake <<
-            "cmake_minimum_required(" << cmakeVersion << ")\n"
-            "project(" << projname << ")\n"
-            "set(CMAKE_CXX_STANDARD 14)\n"
-            "set(CMAKE_CXX_FLAGS \"${CMAKE_CXX_FLAGS} -Wall -Wextra -pedantic\")\n"
-            "add_subdirectory(src)\n";
+    static const std::regex projname_regex{"[{]projname[}]"};
+    std::ifstream in{toplevelfilename};
+    if (!in) {
+        std::cerr << "Error: cannot open top level filename \"" << toplevelfilename << "\"\n";
+        exit(1);
+    }
+    std::ofstream topcmake{projname + "/CMakeLists.txt"};
+    std::string line;
+    while (std::getline(in, line)) {
+        topcmake << std::regex_replace(line, projname_regex, projname) << '\n';
+    }
 }
 
 void AutoProject::checkRules(const std::string &line) {
