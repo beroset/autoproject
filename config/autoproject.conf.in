@@ -1,0 +1,12 @@
+# configuration file for autoproject
+[General]
+# Version must match the major version number for autoproject
+Version=@CPACK_PACKAGE_VERSION_MAJOR@
+# This is the directory in which all other configuration files are located
+ConfigFileDir=${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_DATADIR}/${CPACK_PACKAGE_NAME}/config
+# The name of the rules file
+RulesFileName=rules.txt
+# The name of the top level CMake file
+TopLevelCMakeFileName=toplevel.cmake.txt
+# By default, don't overwrite output files or directories
+ForceOverwrite=false

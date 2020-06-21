@@ -2,11 +2,11 @@ cmake_minimum_required(VERSION 3.1)
 project(autoproject)
 set(CMAKE_CXX_STANDARD 17)
 set(CPACK_PACKAGE_VERSION_MAJOR "1")
-set(CPACK_PACKAGE_VERSION_MINOR "0")
+set(CPACK_PACKAGE_VERSION_MINOR "1")
 set(CPACK_PACKAGE_VERSION_PATCH "0")
 set (CPACK_RESOURCE_FILE_LICENSE  
      "${CMAKE_CURRENT_SOURCE_DIR}/LICENSE")
-set (CPACK_PACKAGE_VENDOR "beroset")
+set(CPACK_PACKAGE_VENDOR "beroset")
 SET(CPACK_SOURCE_IGNORE_FILES "/build/;/*.swp;.git*")
 set(CPACK_PACKAGE_NAME autoproject)
 
@@ -23,6 +23,11 @@ configure_file (
     "${PROJECT_BINARY_DIR}/config.h"
 )
 
+configure_file (
+    "${PROJECT_SOURCE_DIR}/config/autoproject.conf.in" 
+    "${PROJECT_BINARY_DIR}/autoproject.conf"
+)
+
 # add the binary tree to the search path for include files
 # so that we will find config.h
 include_directories("${PROJECT_BINARY_DIR}")
@@ -36,5 +41,7 @@ if (WITH_TEST)
 endif() 
 
 INCLUDE(InstallRequiredSystemLibraries)
-INSTALL(DIRECTORY config DESTINATION share/autoproject)
+INSTALL(FILES config/rules.txt DESTINATION share/autoproject/config)
+INSTALL(FILES config/toplevel.cmake.txt DESTINATION share/autoproject/config)
+INSTALL(FILES "${PROJECT_BINARY_DIR}/autoproject.conf" DESTINATION share/autoproject/config)
 include(CPack)

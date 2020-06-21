@@ -1,10 +1,9 @@
 #ifndef CONFIGFILE_H
 #define CONFIGFILE_H
 
+#include <iostream>
 #include <string>
 #include <unordered_map>
-#include <iostream>
-
 
 class ConfigFile
 {

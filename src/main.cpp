@@ -1,8 +1,9 @@
+#include "config.h"
+#include "AutoProject.h"
+#include "ConfigFile.h"
 #include <iostream>
 #include <string_view>
 #include <map>
-#include "AutoProject.h"
-#include "ConfigFile.h"
 
 constexpr std::string_view license{R"(
 
@@ -32,11 +33,32 @@ constexpr std::string_view license{R"(
 
 )"};
 
-int main(int argc, char *argv[])
-{
-    std::map<std::string, bool> args{
-        { "--force-overwrite", false },
-        { "--license", false },
+static const std::string configfilename{DATAFILE_DIR "/config/autoproject.conf"};
+
+int main(int argc, char *argv[]) {
+    ConfigFile cfg{configfilename};
+    struct {
+        std::string configfiledir;
+        std::string rulesfilename;
+        std::string toplevelcmakefilename;
+        bool forceOverwrite = false;
+        bool license = false;
+    } configuration;
+    if (std::stoi(cfg.get_value("General", "Version")) != VERSION_MAJOR) {
+        std::cerr << "Error: version in " << configfilename << " does not equal " << VERSION_MAJOR << "\n";
+    } else {
+        auto over{cfg.get_value("General", "ForceOverwrite")};
+        if (over == "true" || over == "TRUE" || over == "True") {
+            configuration.forceOverwrite = true;
+        }
+    }
+    configuration.configfiledir = cfg.get_value("General", "ConfigFileDir");
+    configuration.rulesfilename = configuration.configfiledir + "/" + cfg.get_value("General", "RulesFileName");
+    configuration.toplevelcmakefilename = configuration.configfiledir + "/" + cfg.get_value("General", "TopLevelCMakeFileName");
+
+    std::map<std::string, bool&> args{
+        { "--force-overwrite", configuration.forceOverwrite },
+        { "--license", configuration.license },
     };
     std::map<std::string, std::string> shortargs{
         { "-f", "--force-overwrite" },
@@ -47,18 +69,18 @@ int main(int argc, char *argv[])
         auto option = args.find(argv[i]);
         if (option != args.end()) {
             std::cout << "Found option " << option->first << '\n';
-            option->second = !option->second;
+            option->second = true;
             ++processed_args;
         }
         auto shortoption = shortargs.find(argv[i]);
         if (shortoption != shortargs.end()) {
             std::cout << "Found option " << shortoption->first << '\n';
             option = args.find(shortoption->second);
-            option->second = !option->second;
+            option->second = true;
             ++processed_args;
         }
     }
-    if (args.at("--license")) {
+    if (configuration.license) {
         std::cout << license;
     }
     if (argc - processed_args != 2) {
@@ -67,14 +89,17 @@ int main(int argc, char *argv[])
     }
     AutoProject ap;
     try {
-        ap.open(argv[argc - processed_args]);
+        ap.open(argv[argc - processed_args], 
+                configuration.rulesfilename, 
+                configuration.toplevelcmakefilename
+        );
     }
     catch(std::exception& e) {
         std::cerr << "Error: " << e.what() << '\n';
         return 1;
     }
     try {
-        if (ap.createProject(args.at("--force-overwrite"))) {
+        if (ap.createProject(configuration.forceOverwrite)) {
             std::cout << ap;   // print final status
         }
     }

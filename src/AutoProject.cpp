@@ -39,26 +39,27 @@ static std::vector<Rule> loadrules(const std::string &rulesfile);
 
 // local constants
 static const std::string mdextension{".md"};
-static const std::string rulesfilename{DATAFILE_DIR "/config/rules.txt"};
-static const std::string toplevelfilename{DATAFILE_DIR "/config/toplevel.cmake.txt"};
 static constexpr std::string_view cmakeVersion{"VERSION 3.1"};
 static constexpr unsigned indentLevel{4};
 static constexpr unsigned delimLength{3};
-static const std::vector<Rule> rules{loadrules(rulesfilename)};
 const std::regex Rule::newline{R"(\\n)"};
 
+// local variables
+static std::vector<Rule> rules;
 
 // AutoProject interface functions
-void AutoProject::open(fs::path mdFilename)  {
-    AutoProject ap(mdFilename);
+void AutoProject::open(fs::path mdFilename, fs::path rulesfilename, fs::path toplevelfilename)  {
+    AutoProject ap(mdFilename, rulesfilename, toplevelfilename);
     std::swap(ap, *this);
 }
 
-AutoProject::AutoProject(fs::path mdFilename) :
+AutoProject::AutoProject(fs::path mdFilename, fs::path rulesfilename, fs::path toplevelfilename) :
     mdfile{mdFilename},
     projname{mdfile.stem().string()},
     srcdir{projname + "/src"},
-    in{mdfile}
+    in{mdfile},
+    rulesfilename{rulesfilename},
+    toplevelfilename{toplevelfilename}
 {
     if (mdfile.extension() != mdextension) {
         throw FileExtensionException("Input file must have " + mdextension + " extension");
@@ -66,6 +67,7 @@ AutoProject::AutoProject(fs::path mdFilename) :
     if (!in) {
         throw std::runtime_error("Cannot open input file "s + mdfile.string());
     }
+    rules = loadrules(rulesfilename);
 }
 
 /*
