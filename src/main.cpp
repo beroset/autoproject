@@ -41,6 +41,7 @@ int main(int argc, char *argv[]) {
         std::string configfiledir;
         std::string rulesfilename;
         std::string toplevelcmakefilename;
+        std::string srclevelcmakefilename;
         bool forceOverwrite = false;
         bool license = false;
     } configuration;
@@ -55,6 +56,7 @@ int main(int argc, char *argv[]) {
     configuration.configfiledir = cfg.get_value("General", "ConfigFileDir");
     configuration.rulesfilename = configuration.configfiledir + "/" + cfg.get_value("General", "RulesFileName");
     configuration.toplevelcmakefilename = configuration.configfiledir + "/" + cfg.get_value("General", "TopLevelCMakeFileName");
+    configuration.srclevelcmakefilename = configuration.configfiledir + "/" + cfg.get_value("General", "SrcLevelCMakeFileName");
 
     std::map<std::string, bool&> args{
         { "--force-overwrite", configuration.forceOverwrite },
@@ -91,7 +93,8 @@ int main(int argc, char *argv[]) {
     try {
         ap.open(argv[argc - processed_args], 
                 configuration.rulesfilename, 
-                configuration.toplevelcmakefilename
+                configuration.toplevelcmakefilename,
+                configuration.srclevelcmakefilename
         );
     }
     catch(std::exception& e) {

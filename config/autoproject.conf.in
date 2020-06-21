@@ -8,5 +8,7 @@ ConfigFileDir=${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_DATADIR}/${CPACK_PACKAGE_N
 RulesFileName=rules.txt
 # The name of the top level CMake file
 TopLevelCMakeFileName=toplevel.cmake.txt
+# The name of the source level CMake file
+SrcLevelCMakeFileName=srclevel.cmake.txt
 # By default, don't overwrite output files or directories
 ForceOverwrite=false

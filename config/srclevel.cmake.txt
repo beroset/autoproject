@@ -1,0 +1,4 @@
+cmake_minimum_required(VERSION 3.1)
+{extras}
+add_executable({projname} {srcnames})
+target_link_libraries({projname} {libraries})

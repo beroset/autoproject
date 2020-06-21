@@ -27,8 +27,8 @@ public:
 class AutoProject {
 public:
     AutoProject() = default;
-    AutoProject(fs::path mdFilename, fs::path rulesfilename, fs::path toplevelfilename);
-    void open(fs::path mdFilename, fs::path rulesfilename, fs::path toplevelfilename);
+    AutoProject(fs::path mdFilename, fs::path rulesfilename, fs::path toplevelfilename, fs::path srclevelfilename);
+    void open(fs::path mdFilename, fs::path rulesfilename, fs::path toplevelfilename, fs::path srclevelfilename);
     // create the project
     bool createProject(bool overwrite);
     /// print final status to `out`
@@ -50,6 +50,7 @@ private:
     std::ifstream in;
     fs::path rulesfilename;
     fs::path toplevelfilename;
+    fs::path srclevelfilename;
     std::unordered_set<fs::path, path_hash> srcnames;
     std::unordered_set<std::string> extraRules;
     std::unordered_set<std::string> libraries;

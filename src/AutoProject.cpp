@@ -48,18 +48,19 @@ const std::regex Rule::newline{R"(\\n)"};
 static std::vector<Rule> rules;
 
 // AutoProject interface functions
-void AutoProject::open(fs::path mdFilename, fs::path rulesfilename, fs::path toplevelfilename)  {
-    AutoProject ap(mdFilename, rulesfilename, toplevelfilename);
+void AutoProject::open(fs::path mdFilename, fs::path rulesfilename, fs::path toplevelfilename, fs::path srclevelfilename)  {
+    AutoProject ap(mdFilename, rulesfilename, toplevelfilename, srclevelfilename);
     std::swap(ap, *this);
 }
 
-AutoProject::AutoProject(fs::path mdFilename, fs::path rulesfilename, fs::path toplevelfilename) :
+AutoProject::AutoProject(fs::path mdFilename, fs::path rulesfilename, fs::path toplevelfilename, fs::path srclevelfilename) :
     mdfile{mdFilename},
     projname{mdfile.stem().string()},
     srcdir{projname + "/src"},
     in{mdfile},
     rulesfilename{rulesfilename},
-    toplevelfilename{toplevelfilename}
+    toplevelfilename{toplevelfilename},
+    srclevelfilename{srclevelfilename}
 {
     if (mdfile.extension() != mdextension) {
         throw FileExtensionException("Input file must have " + mdextension + " extension");
@@ -186,26 +187,37 @@ void AutoProject::makeTree(bool overwrite) {
 }
 
 void AutoProject::writeSrcLevel() const {
+    static const std::regex projname_regex{"[{]projname[}]"};
+    static const std::regex extras_regex{"[{]extras[}]"};
+    static const std::regex srcnames_regex{"[{]srcnames[}]"};
+    static const std::regex libraries_regex{"[{]libraries[}]"};
+    std::ifstream in{srclevelfilename};
+    if (!in) {
+        std::cerr << "Error: cannot open source level filename \"" << srclevelfilename << "\"\n";
+        exit(1);
+    }
+    std::stringstream extras;
+    for (const auto &rule : extraRules) {
+        extras << rule;
+    }
+    std::stringstream sources;
+    for (const auto& fn : srcnames) {
+        sources << ' ' << fn;
+    }
+    std::stringstream libs;
+    for (const auto &lib : libraries) {
+        libs << ' ' << lib;
+    }
     // write CMakeLists.txt with filenames to projname/src
     std::ofstream srccmake(srcdir + "/CMakeLists.txt");
-    srccmake <<
-            "cmake_minimum_required(" << cmakeVersion << ")\n"
-            "set(EXECUTABLE_NAME \"" << projname << "\")\n";
-    for (const auto &rule : extraRules) {
-        srccmake << rule << '\n';
+    std::string line;
+    while (std::getline(in, line)) {
+        line = std::regex_replace(line, projname_regex, projname);
+        line = std::regex_replace(line, srcnames_regex, sources.str());
+        line = std::regex_replace(line, extras_regex, extras.str());
+        line = std::regex_replace(line, libraries_regex, libs.str());
+        srccmake << line << '\n';
     }
-    srccmake <<
-            "add_executable(${EXECUTABLE_NAME}";
-    for (const auto& fn : srcnames) {
-        srccmake << ' ' << fn;
-    }
-    srccmake <<
-            ")\ntarget_link_libraries(${EXECUTABLE_NAME}";
-    for (const auto &lib : libraries) {
-        srccmake << ' ' << lib;
-    }
-    srccmake << ")\n";
-    srccmake.close();
 }
 
 void AutoProject::writeTopLevel() const {
