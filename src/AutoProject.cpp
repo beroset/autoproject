@@ -4,6 +4,7 @@
 #include <algorithm>
 #include <iostream>
 #include <regex>
+#include <sstream>
 #include <vector>
 #include <string_view>
 
@@ -35,7 +36,7 @@ static bool isSourceExtension(const std::string_view ext);
 static bool isSourceFilename(std::string &line);
 static std::string &replaceLeadingTabs(std::string &line);
 static void emit(std::ostream& out, const std::string &line);
-static std::vector<Rule> loadrules(const std::string &rulesfile);
+static std::vector<Rule> loadrules(const fs::path &rulesfile);
 
 // local constants
 static const std::string mdextension{".md"};
@@ -364,7 +365,7 @@ void emit(std::ostream& out, const std::string &line) {
     }
 }
 
-std::vector<Rule> loadrules(const std::string &rulesfile) {
+std::vector<Rule> loadrules(const fs::path &rulesfile) {
     std::vector<Rule> rules;
     std::ifstream in(rulesfile);
     if (!in) {

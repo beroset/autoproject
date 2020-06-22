@@ -2,6 +2,7 @@
 #include "AutoProject.h"
 #include "ConfigFile.h"
 #include <iostream>
+#include <string>
 #include <string_view>
 #include <map>
 
