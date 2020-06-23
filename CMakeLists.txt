@@ -24,8 +24,13 @@ configure_file (
 )
 
 configure_file (
-    "${PROJECT_SOURCE_DIR}/config/autoproject.conf.in" 
+    "${PROJECT_SOURCE_DIR}/config/autoproject.conf.in"
     "${PROJECT_BINARY_DIR}/autoproject.conf"
+)
+
+configure_file (
+    "${PROJECT_SOURCE_DIR}/config/autoprojecttest.conf.in"
+    "${PROJECT_BINARY_DIR}/autoprojecttest.conf"
 )
 
 # add the binary tree to the search path for include files

@@ -68,6 +68,7 @@ int main(int argc, char *argv[]) {
     // What's the best way to do that?
     int processed_args{0};
     for (int i=1; i < argc; ++i) {
+        // std::cout << "argv[" << i << "] = " << argv[i] << ", processed_args = " << processed_args << '\n';
         auto option = boolargs.find(argv[i]);
         if (option != boolargs.end()) {
             std::cout << "Found option " << option->first << '\n';
@@ -78,8 +79,8 @@ int main(int argc, char *argv[]) {
         auto stroption = stringargs.find(argv[i]);
         if (stroption != stringargs.end()) {
             std::cout << "Found option " << stroption->first << '\n';
-            stroption->second = argv[i+1];
-            ++processed_args;
+            stroption->second = argv[++i];
+            processed_args += 2;
         }
 
         auto shortoption = shortargs.find(argv[i]);
@@ -94,8 +95,8 @@ int main(int argc, char *argv[]) {
         if (shortstroption != shortargs.end()) {
             std::cout << "Found option " << shortoption->first << '\n';
             stroption = stringargs.find(shortstroption->second);
-            stroption->second = argv[i+1];
-            ++processed_args;
+            stroption->second = argv[++i];
+            processed_args += 2;
         }
     }
     if (configuration.license) {
@@ -131,7 +132,7 @@ int main(int argc, char *argv[]) {
     }
     AutoProject ap;
     try {
-        ap.open(argv[argc - processed_args], 
+        ap.open(argv[argc - 1], 
                 configuration.rulesfilename, 
                 configuration.toplevelcmakefilename,
                 configuration.srclevelcmakefilename
