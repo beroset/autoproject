@@ -36,19 +36,15 @@ public:
     void streamOutput() {
         std::stringstream ss(sample);
         ConfigFile cfg{ss};
-        std::string_view desired{R"([user]
-	active = true
-	pi = 3.14159
-	email = bob@smith.com
-	name = Robert "Bob" Smith
-[protocol]
-	version = 6
-)"};
+        // write it to another stream
         std::stringstream answer;
         answer << cfg;
-        std::cout << "Desired \"" << desired << "\"\n"
-            << "got \"" << answer.str() << "\"\n";
-        CPPUNIT_ASSERT(answer.str() == desired);
+        // read back in
+        std::cout << "answer.str() = \"" << answer.str() << "\"\n";
+        ConfigFile desired{answer};
+        std::cout << "cfg = \"" << cfg << "\"\n";
+        std::cout << "desired = \"" << desired << "\"\n";
+        CPPUNIT_ASSERT(cfg == desired);
     }
 
     void fileInput() {

@@ -154,6 +154,9 @@ void ConfigFile::delete_section(const std::string& sectionname) {
         map.erase(sect);
     }
 }
+bool ConfigFile::operator==(const ConfigFile& other) const {
+    return map == other.map;
+}
 
 std::ostream& operator<<(std::ostream& out, const ConfigFile& cfg) {
     for (const auto &sect : cfg.map) {

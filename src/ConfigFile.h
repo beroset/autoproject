@@ -17,6 +17,7 @@ public:
     void delete_key(const std::string& sectionname, const std::string& keyname);
     bool has_section(const std::string& sectionname) const;
     void delete_section(const std::string& sectionname);
+    bool operator==(const ConfigFile& other) const;
     friend std::ostream& operator<<(std::ostream& out, const ConfigFile& cfg);
 
 private:
