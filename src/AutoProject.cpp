@@ -199,7 +199,7 @@ void AutoProject::writeSrcLevel() const {
     }
     std::stringstream extras;
     for (const auto &rule : extraRules) {
-        extras << rule;
+        extras << rule << '\n';
     }
     std::stringstream sources;
     for (const auto& fn : srcnames) {
