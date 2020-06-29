@@ -1,3 +1,6 @@
+# [GUI Number Generator in QT C++](https://codereview.stackexchange.com/questions/217257)
+### tags: ['c++', 'gui', 'qt']
+
 I'm pretty new to Qt but already have a little experience with C++ so the first "project" I wanted to try out was a ***GUI random number generator***. 
 I am looking for some advices either in naming conventions or OOP architecture, what should I do better and what I'm already doing good. The code is really short so there is not so much to review but I hope you will find something.
 
@@ -28,9 +31,11 @@ Thanks for tips
 
 ***main.cpp***
 
+***
+
     #include <QApplication>
     #include <iostream>
-    #include "Generator.h"
+    #include "generator.h"
     int main(int argc, char **argv)
     {
         QApplication qapp( argc, argv );
@@ -45,7 +50,7 @@ Thanks for tips
         return 0;
     }
 
-***Config.h***
+***config.h***
 
     #ifndef CONFIG_H
     #define CONFIG_H
@@ -98,7 +103,7 @@ Thanks for tips
     
     #endif // CONFIG_H
 
-***Generator.h***
+***generator.h***
 
     #ifndef GENERATOR_H
     #define GENERATOR_H
@@ -144,7 +149,7 @@ Thanks for tips
     
     #endif // GENERATOR_H
 
-***Generator.cpp***
+***generator.cpp***
 
     #include <QGroupBox>
     #include <QLabel>
@@ -156,8 +161,8 @@ Thanks for tips
     #include <random>
     #include <qglobal.h>
     
-    #include "Config.h"
-    #include "Generator.h"
+    #include "config.h"
+    #include "generator.h"
     
     
     Generator::Generator( QWidget* parent )

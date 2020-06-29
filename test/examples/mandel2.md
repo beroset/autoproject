@@ -1,3 +1,6 @@
+# [Mandelbrot Fractal Drawer in C++](https://codereview.stackexchange.com/questions/160287)
+### tags: ['c++', 'c++11', 'image', 'opengl', 'fractals']
+
 As an exercise to learn how OpenGL and image creation worked, as well as to satisfy a curiosity I've developed for Chaos Theory, I decided to create a mandelbrot fractal drawer in C++, which can either draw to an OpenGL context or to a PNG image. I am a beginner at C++, and would much appreciate any constructive feedback. Also, please ridicule me on how I create my images, and how I can make them look better as well.
 
 # main.cpp
@@ -229,7 +232,6 @@ As an exercise to learn how OpenGL and image creation worked, as well as to sati
             _x_max(x_max);
         }
     };
-    #endif // MANDELBROT_FRACTAL_DRAWER_WINDOW_H
 
 # Image_Buffer.h
 
@@ -534,7 +536,7 @@ As an exercise to learn how OpenGL and image creation worked, as well as to sati
     Draw_Buffer::~Draw_Buffer() {
     
     // Unbind buffer
-        glBindVertexArray(0);
+        glBindVertexArray(NULL);
     
     // Delete shaders
         glDeleteProgram(shader_prog);

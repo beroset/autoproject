@@ -1,4 +1,5 @@
 # [Beginner's Snake Game using SFML and C++](https://codereview.stackexchange.com/questions/221024)
+### tags: ['c++', 'beginner', 'object-oriented', 'snake-game', 'sfml']
 
 Never really got past the beginner stage of programming so I'm trying to get better this Summer. I think games are a fun way to learn how to program so I decided to start with snake. I'd appreciate any feedback or learning resources you guys think might be helpful. Cheers!
 
@@ -208,8 +209,8 @@ From the menu screen, when the user presses play, the game initializes (the snak
     
     #include "FoodGenerator.h"
     #include "MainMenu.h"
-    #include "SFML/Window.hpp"
-    #include "SFML/Graphics.hpp"
+    #include "SFML\Window.hpp"
+    #include "SFML\Graphics.hpp"
     #include "SnakeBody.h"
     
     namespace windowparameters
@@ -336,7 +337,7 @@ From the menu screen, when the user presses play, the game initializes (the snak
     
     #include <list>
     
-    #include "SFML/Graphics.hpp"
+    #include "SFML\Graphics.hpp"
     
     class MainMenu
     {
@@ -437,7 +438,7 @@ From the menu screen, when the user presses play, the game initializes (the snak
     #include <list>
     
     #include "Coordinate.h"
-    #include "SFML/Graphics.hpp"
+    #include "SFML\Graphics.hpp"
     
     
     class SnakeBody

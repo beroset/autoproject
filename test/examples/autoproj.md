@@ -1,8 +1,15 @@
+# [From new Q to compiler in 30 seconds](https://codereview.stackexchange.com/questions/124307)
+### tags: ['c++', 'file-system', 'cmake', 'c++17']
+
 Reviewing code doesn't necessarily require actually *building* it, but it's often helpful to do so in order to evaluate fully.  I usually create a `CMake` project and build from there.  Since we're all about code here, naturally, I decided to automate part of the process.  Specifically, here's how to use this code:  
 
- 1. Hit "edit" on the question of interest that contains one or more C or C++ source code files
- 2. Select the entire editable question and paste into a local text file with some appropriate name (this one might be `autoproject.md`)
+ 1. <strike> Hit "edit" on the question of interest that contains one or more C or C++ source code files</strike>
+ 2. <strike>Select the entire editable question and paste into a local text file with some appropriate name (this one might be `autoproject.md`)</strike>
  3. run this code using the command line `autoproject project.md`
+
+**Update:** I've just created a [Python `.md` file fetcher](https://codereview.stackexchange.com/questions/124479/from-q-to-compiler-in-less-than-30-seconds) that replaces the first two steps above.
+
+**Note:** This code and its companion Python project are now available in a [github repo](https://github.com/beroset/autoproject).
 
 This will automatically parse the `project.md` file and extract the files it finds to a directory tree like this.
 
@@ -23,11 +30,13 @@ For much code in many questions, all that is then required is to navigate to the
     cmake ..
     make 
 
-The executable (if succefully created) will be created in `build/src` and will be named `project` (or whatever more meaningful name you have given the original `.md` file).  Note that this will **not work** if there are special things needed by the code in question.  For instance, this code itself will **not** build unless this line is added to the `src/CMakeLists.txt` file (assuming `g++`):
+The executable (if successfully created) will be created in `build/src` and will be named `project` (or whatever more meaningful name you have given the original `.md` file).  Examples of questions for which this works are https://codereview.stackexchange.com/questions/123489/recursive-breadth-first-search-for-knights-tour and https://codereview.stackexchange.com/questions/78362/hangman-on-the-command-line.
+
+Note that this will **not work** if there are special things needed by the code in question.  For instance, this code itself will **not** build unless this line is added to the `src/CMakeLists.txt` file (assuming `g++`):
 
     target_link_libraries(${EXECUTABLE_NAME} stdc++fs)
 
-The reason is that it uses the C++17 `filesystem` feature which is still in the `experimental` namespace and so must, for now [must be linked with `libstdc++fs`](https://gcc.gnu.org/onlinedocs/libstdc++/manual/using.html#manual.intro.using.flags).  Note also, that `CMake` will automatically use the environment variables `CFLAGS` and `CXXFLAGS`.  My setup, which works well for many programs including this one includes `CXXFLAGS="-Wall -Wextra -pedantic -std=c++14"`.  The important part here is that this particular program should be compiled with C++14 compatibility.  I have not yet tried this code on plaforms other than Linux.
+The reason is that it uses the C++17 `filesystem` feature which is still in the `experimental` namespace and so must, for now [must be linked with `libstdc++fs`](https://gcc.gnu.org/onlinedocs/libstdc++/manual/using.html#manual.intro.using.flags).  Note also, that `CMake` will automatically use the environment variables `CFLAGS` and `CXXFLAGS`.  My setup, which works well for many programs including this one includes `CXXFLAGS="-Wall -Wextra -pedantic -std=c++14"`.  The important part here is that this particular program should be compiled with C++14 compatibility.  I have not yet tried this code on platforms other than Linux.
 
 I'm interested in a general code review, and particularly if there are improvements that could or should be made to the design or interface to the `AutoProject` class.
 
@@ -90,14 +99,14 @@ Here are the files:
     #include <unordered_set>
     #include <algorithm>
     #include <iostream>
-
+    
     const std::string AutoProject::mdextension{".md"};  
-
+    
     void AutoProject::open(fs::path mdFilename)  {
         AutoProject ap(mdFilename);
         std::swap(ap, *this);
     }
-
+    
     AutoProject::AutoProject(fs::path mdFilename) : 
         mdfile{mdFilename},
         projname{mdfile.stem()},
@@ -118,18 +127,18 @@ Here are the files:
         }
         fs::create_directories(projname + "/build/");
     }
-
+    
     /// returns true if passed file extension is an identified source code extension.
     bool isSourceExtension(const std::string &ext) {
         static const std::unordered_set<std::string> source_extensions{".cpp", ".c", ".h", ".hpp"};
         return source_extensions.find(ext) != source_extensions.end();
     }
-
+    
     void AutoProject::copyFile() const {
         // copy md file to projname/src
         fs::copy_file(mdfile, srcdir + projname + mdextension);
     }
-
+    
     bool AutoProject::createProject() {
         std::string prevline;
         bool infile = false;
@@ -139,7 +148,7 @@ Here are the files:
             // scan through looking for lines indented with indentLevel spaces
             if (infile) {
                 // stop writing if non-indented line or EOF
-                if (!line.empty() && line[0] != ' ') {
+                if (!line.empty() && !isspace(line[0])) {
                     prevline = line;
                     srcfile.close();
                     infile = false;
@@ -166,9 +175,10 @@ Here are the files:
         in.close();
         writeSrcLevel();
         writeTopLevel();
+        copyFile();
         return !srcnames.empty();
     }
-
+    
     std::string& AutoProject::trim(std::string& str, char ch) {
         auto it = str.begin();
         for ( ; (*it == ch || isspace(*it)) && it != str.end(); ++it) 
@@ -178,19 +188,19 @@ Here are the files:
         }
         return str;
     }
-
+    
     std::string& AutoProject::rtrim(std::string& str, char ch) {
         std::reverse(str.begin(), str.end());
         trim(str, ch);
         std::reverse(str.begin(), str.end());
         return str;
     }
-
+    
     bool AutoProject::isSourceFilename(std::string& line) const {
         trimExtras(line);
         return isSourceExtension(fs::path(line).extension());
     }
-
+    
     std::string AutoProject::trimExtras(std::string& line) const
     {
         if (line.empty()) {
@@ -206,7 +216,7 @@ Here are the files:
         rtrim(line, ':');
         return line;
     }
-
+    
     void AutoProject::writeSrcLevel() const {
         // write CMakeLists.txt with filenames to projname/src
         std::ofstream srccmake(srcdir + "CMakeLists.txt");
@@ -220,7 +230,7 @@ Here are the files:
         srccmake << ")\n";
         srccmake.close();
     }
-
+    
     void AutoProject::writeTopLevel() const {
         // write CMakeLists.txt top level to projname
         std::ofstream topcmake(projname + "/CMakeLists.txt");
@@ -229,7 +239,7 @@ Here are the files:
                 "project(" << projname << ")\n"
                 "add_subdirectory(src)\n";
     }
-
+    
     bool AutoProject::isIndented(const std::string& line) const {
         size_t indent = line.find_first_not_of(' ');
         if (indent >= indentLevel && indent != std::string::npos) {
@@ -237,9 +247,13 @@ Here are the files:
         }
         return !(indent == 0);
     }
-
+    
     void AutoProject::emit(std::ostream& out, const std::string &line) const {
-        out << (line.size() >= indentLevel ? line.substr(indentLevel) : line) << '\n';
+        if (line.size() < indentLevel) {
+            out << line << '\n';
+        } else {
+            out << (line[0] == ' ' ? line.substr(indentLevel) : line.substr(1)) << '\n';
+        }
     }
 
 ## main.cpp
@@ -268,3 +282,4 @@ Here are the files:
             }
         }
     }
+

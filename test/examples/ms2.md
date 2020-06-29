@@ -1,3 +1,6 @@
+# [Simple Minesweeper using OpenGL / GLUT](https://codereview.stackexchange.com/questions/158957)
+### tags: ['c++', 'opengl', 'minesweeper']
+
 I'm trying to make minesweeper similar to windows 3.1 minesweeper by using OpenGL / GLUT. The game still in early stage but playable. I would like to know, how can I improve it.
 
 EDIT 1:
@@ -26,7 +29,7 @@ removed the old window time with the c++11 std::chrono
     #include <random>
     #include <chrono>
     
-    #include <GL/glut.h>
+    #include <gl/glut.h>
     
     
     enum { MINE = 9 };

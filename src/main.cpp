@@ -128,11 +128,14 @@ int main(int argc, char *argv[]) {
 
     if (argc - processed_args != 2) {
         std::cerr << "Usage: autoproject project.md\nCreates a CMake build tree under 'project' subdirectory\n";
+        for (int i=processed_args+1; i < argc; ++i) {
+            std::cout << "argv[" << i << "] = \"" << argv[i] << "\"\n";
+        }
         return 0;
     }
     AutoProject ap;
     try {
-        ap.open(argv[argc - 1], 
+        ap.open(argv[processed_args + 1], 
                 configuration.rulesfilename, 
                 configuration.toplevelcmakefilename,
                 configuration.srclevelcmakefilename

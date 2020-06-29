@@ -1,4 +1,5 @@
 # [Simple C++ program to keep moving average of price](https://codereview.stackexchange.com/questions/221052)
+### tags: ['c++', 'performance', 'c++11', 'statistics', 'boost']
 
 The simple program listed below reads a text file with a specified format, update its time record of a stock price then calculates the time-weighted moving average of the price.
 

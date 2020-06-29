@@ -1,4 +1,5 @@
 # [Minefield - A Cross Platform Minesweeper clone](https://codereview.stackexchange.com/questions/231598)
+### tags: ['c++', 'game', 'c++17', 'qt']
 
 [![enter image description here][1]][1]
 

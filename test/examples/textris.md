@@ -1,3 +1,6 @@
+# [Multithreaded text-based Tetris game](https://codereview.stackexchange.com/questions/133830)
+### tags: ['c', 'multithreading', 'tetris']
+
 I have decided to make a game of text-based Tetris in C. At first I had no idea how to start so I settled for threads. Each thread moves its own piece down the grid and all the main thread does is redraw it every 16ms.
 
 However, now I see that multi-threading a game like Tetris isn't necessary at all. Now I can't figure out an efficient way to rotate my pieces. I have only made 3 of them for now and thought I would make the rest when I figure out rotation. At the moment I have made rotation work for the line piece, but that required a huge chunk of code and is just hideous.

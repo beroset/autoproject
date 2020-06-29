@@ -1,8 +1,11 @@
-This is simple program converts user inputted decimal numbers into octal ones. General advice is appreciated!
+# [Converting decimal to octal](https://codereview.stackexchange.com/questions/206499)
+### tags: ['c++', 'beginner', 'algorithm', 'number-systems']
+
+This is a simple program converting user input decimal numbers into octal ones. 
 
    
 
-     #include <iostream>
+    #include <iostream>
     using namespace std;
     main()
     {

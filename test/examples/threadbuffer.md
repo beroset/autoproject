@@ -1,3 +1,6 @@
+# [Multi-thread safe buffer in C++](https://codereview.stackexchange.com/questions/151881)
+### tags: ['c++', 'c++11', 'multithreading']
+
 I am trying to design thread-safe data structure that I cna use as a buffer in my application. Can you please give me comments about this code and what can be improved:
 
     #include <deque>

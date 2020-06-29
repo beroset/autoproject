@@ -1,3 +1,6 @@
+# [Adjacency List C++14](https://codereview.stackexchange.com/questions/189377)
+### tags: ['c++', 'graph', 'c++14']
+
 I would like to create a graph library for fun and run various searching algorithms on it. For now, all I have is an adjacency list that I threw together. The adjacency list currently only supports undirected graphs. 
 
 **node.h**

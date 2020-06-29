@@ -1,8 +1,12 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 """ Code Review question fetcher.  Given the number of the question, uses
 the StackExchange API version 2.2 to fetch the markdown of the question and
 write it to a local file with the name given as the second argument. """
 import sys
+MIN_PYTHON = (3, 5)
+if sys.version_info < MIN_PYTHON:
+    sys.exit("Python %s.%s or later is required.\n" % MIN_PYTHON)
+
 import urllib.request
 import urllib.parse
 import urllib.error
@@ -12,7 +16,7 @@ import gzip
 import json
 import struct
 import html.parser
-from subprocess import call
+from subprocess import run
 
 
 def make_URL(qnumber):
@@ -88,9 +92,10 @@ if __name__ == '__main__':
         msg = fetch_question_markdown(qnumber)
 
     md = html.unescape(msg['body_markdown']).replace('\r\n', '\n').encode('utf-8')
-    title = html.unescape(msg['title']).encode('utf-8')
-    header = b'# [{title}](https://codereview.stackexchange.com/questions/{qnumber})\n\n'
+    title = html.unescape(msg['title'])
+    tags = msg['tags']
+    header = f'# [{title}](https://codereview.stackexchange.com/questions/{qnumber})\n### tags: {tags}\n\n'
     with open(qname, 'wb') as f:
-        f.write(header)
+        f.write(header.encode('utf-8'))
         f.write(md)
-    call(["autoproject", qname])
+    run(["autoproject", qname])
