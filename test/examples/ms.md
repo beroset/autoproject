@@ -1,3 +1,6 @@
+# Almost empty test file
+### tags: ['c++', 'file-system', 'cmake', 'c++17']
+
 This is a test file.
 
 here image for latest update:

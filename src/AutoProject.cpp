@@ -33,10 +33,10 @@ static bool isIndentedOrEmpty(const std::string& line);
 static bool isEmptyOrUnderline(const std::string& line);
 static bool isDelimited(const std::string& line);
 static bool isSourceExtension(const std::string_view ext);
-static bool isSourceFilename(std::string &line);
-static std::string &replaceLeadingTabs(std::string &line);
-static void emit(std::ostream& out, const std::string &line);
-static std::vector<Rule> loadrules(const fs::path &rulesfile);
+static bool isSourceFilename(std::string& line);
+static std::string &replaceLeadingTabs(std::string& line);
+static void emit(std::ostream& out, const std::string& line);
+static std::vector<Rule> loadrules(const fs::path& rulesfile);
 
 // local constants
 static const std::string mdextension{".md"};
@@ -49,19 +49,17 @@ const std::regex Rule::newline{R"(\\n)"};
 static std::vector<Rule> rules;
 
 // AutoProject interface functions
-void AutoProject::open(fs::path mdFilename, fs::path rulesfilename, fs::path toplevelfilename, fs::path srclevelfilename)  {
-    AutoProject ap(mdFilename, rulesfilename, toplevelfilename, srclevelfilename);
+void AutoProject::open(fs::path mdFilename, std::map<std::string, LangConfig> lang) {
+    AutoProject ap(mdFilename, lang);
     std::swap(ap, *this);
 }
 
-AutoProject::AutoProject(fs::path mdFilename, fs::path rulesfilename, fs::path toplevelfilename, fs::path srclevelfilename) :
+AutoProject::AutoProject(fs::path mdFilename, std::map<std::string, LangConfig> lang) :
     mdfile{mdFilename},
     projname{mdfile.stem().string()},
     srcdir{projname + "/src"},
     in{mdfile},
-    rulesfilename{rulesfilename},
-    toplevelfilename{toplevelfilename},
-    srclevelfilename{srclevelfilename}
+    lang{lang}
 {
     if (mdfile.extension() != mdextension) {
         throw FileExtensionException("Input file must have " + mdextension + " extension");
@@ -69,7 +67,6 @@ AutoProject::AutoProject(fs::path mdFilename, fs::path rulesfilename, fs::path t
     if (!in) {
         throw std::runtime_error("Cannot open input file "s + mdfile.string());
     }
-    rules = loadrules(rulesfilename);
 }
 
 /*
@@ -117,7 +114,11 @@ bool AutoProject::createProject(bool overwrite) {
                 if (isSourceFilename(prevline)) {
                     srcfilename = fs::path(srcdir) / prevline;
                 } else {
-                    srcfilename = fs::path(srcdir) / "main.cpp";
+                    if (thislang == "c") {
+                        srcfilename = fs::path(srcdir) / "main.c";
+                    } else {
+                        srcfilename = fs::path(srcdir) / "main.cpp";
+                    }
                 }
                 if (firstFile) {
                     makeTree(overwrite);
@@ -146,7 +147,11 @@ bool AutoProject::createProject(bool overwrite) {
                 } else if (firstFile && !line.empty()) {  // un-named source file
                     makeTree(overwrite);
                     firstFile = false;
-                    srcfilename = fs::path(srcdir) / "main.cpp";
+                    if (thislang == "c") {
+                        srcfilename = fs::path(srcdir) / "main.c";
+                    } else {
+                        srcfilename = fs::path(srcdir) / "main.cpp";
+                    }
                     srcfile.open(srcfilename);
                     if (srcfile) {
                         checkRules(line);
@@ -157,6 +162,7 @@ bool AutoProject::createProject(bool overwrite) {
                 }
             } else {
                 if (!isEmptyOrUnderline(line))
+                    checkLanguageTags(line);
                     std::swap(prevline, line);
             }
         }
@@ -242,6 +248,23 @@ void AutoProject::checkRules(const std::string &line) {
             extraRules.emplace(rule.cmake);
             libraries.emplace(rule.libraries);
         }
+    }
+}
+
+void AutoProject::checkLanguageTags(const std::string& line) {
+    static const std::regex tagcpp{"### tags: \\[.*'c\\+\\+'.*\\]"}; 
+    static const std::regex tagc{"### tags: \\[.*'c'.*\\]"}; 
+    std::smatch pieces;
+    if (std::regex_match(line, pieces, tagcpp)) {
+        thislang = "c++";
+        rules = loadrules(lang[thislang].rulesfilename);
+        toplevelfilename = lang[thislang].toplevelcmakefilename;
+        srclevelfilename = lang[thislang].srclevelcmakefilename;
+    } else if (std::regex_match(line, pieces, tagc)) {
+        thislang = "c";
+        rules = loadrules(lang[thislang].rulesfilename);
+        toplevelfilename = lang[thislang].toplevelcmakefilename;
+        srclevelfilename = lang[thislang].srclevelcmakefilename;
     }
 }
 

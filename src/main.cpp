@@ -38,11 +38,6 @@ static const std::string defaultconfigfilename{DATAFILE_DIR "/config/autoproject
 
 int main(int argc, char *argv[]) {
     std::string configfile{defaultconfigfilename};
-    struct LangConfig {
-        std::string rulesfilename;
-        std::string toplevelcmakefilename;
-        std::string srclevelcmakefilename;
-    };
 
     struct {
         std::string configfiledir;
@@ -126,6 +121,7 @@ int main(int argc, char *argv[]) {
         }
     }
     configuration.configfiledir = cfg.get_value("General", "ConfigFileDir");
+    // TODO: fix this to be less wordy and more concise
     configuration.lang["c++"].rulesfilename = configuration.configfiledir + "/" + cfg.get_value("c++", "Subdir") + "/" + cfg.get_value("c++", "RulesFileName");
     configuration.lang["c++"].toplevelcmakefilename = configuration.configfiledir + "/" + cfg.get_value("c++", "Subdir") + "/" + cfg.get_value("c++", "TopLevelCMakeFileName");
     configuration.lang["c++"].srclevelcmakefilename = configuration.configfiledir + "/" + cfg.get_value("c++", "Subdir") + "/" + cfg.get_value("c++", "SrcLevelCMakeFileName");
@@ -143,11 +139,7 @@ int main(int argc, char *argv[]) {
     }
     AutoProject ap;
     try {
-        ap.open(argv[processed_args + 1], 
-                configuration.lang["c++"].rulesfilename, 
-                configuration.lang["c++"].toplevelcmakefilename,
-                configuration.lang["c++"].srclevelcmakefilename
-        );
+        ap.open(argv[processed_args + 1], configuration.lang);
     }
     catch(std::exception& e) {
         std::cerr << "Error: " << e.what() << '\n';

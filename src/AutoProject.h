@@ -4,6 +4,7 @@
 #include <filesystem>
 #include <fstream>
 #include <functional>
+#include <map>
 #include <string>
 #include <string_view>
 #include <unordered_set>
@@ -24,11 +25,18 @@ public:
     {}
 };
 
+struct LangConfig {
+    fs::path rulesfilename;
+    fs::path toplevelcmakefilename;
+    fs::path srclevelcmakefilename;
+};
+
 class AutoProject {
 public:
     AutoProject() = default;
-    AutoProject(fs::path mdFilename, fs::path rulesfilename, fs::path toplevelfilename, fs::path srclevelfilename);
-    void open(fs::path mdFilename, fs::path rulesfilename, fs::path toplevelfilename, fs::path srclevelfilename);
+    AutoProject(fs::path mdFilename, std::map<std::string, LangConfig> lang);
+    void open(fs::path mdFilename, std::map<std::string, LangConfig> lang);
+    //fs::path rulesfilename, fs::path toplevelfilename, fs::path srclevelfilename);
     // create the project
     bool createProject(bool overwrite);
     /// print final status to `out`
@@ -43,16 +51,18 @@ private:
      * If it matches, add the corresponding rule to `extraRules`.
      */
     void checkRules(const std::string &line);
+    void checkLanguageTags(const std::string& line);
 
     fs::path mdfile;
     std::string projname;
     std::string srcdir;
     std::ifstream in;
-    fs::path rulesfilename;
     fs::path toplevelfilename;
     fs::path srclevelfilename;
     std::unordered_set<fs::path, path_hash> srcnames;
     std::unordered_set<std::string> extraRules;
     std::unordered_set<std::string> libraries;
+    std::string thislang;
+    std::map<std::string, LangConfig> lang;
 };
 #endif // AUTOPROJECT_H
