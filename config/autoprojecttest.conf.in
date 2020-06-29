@@ -4,11 +4,25 @@
 Version=@CPACK_PACKAGE_VERSION_MAJOR@
 # This is the directory in which all other configuration files are located
 ConfigFileDir=${CMAKE_SOURCE_DIR}/config
+# By default, don't overwrite output files or directories
+ForceOverwrite=false
+
+[c++]
+# The name of the subdirectory under ConfigFileDir
+Subdir=cpp
 # The name of the rules file
 RulesFileName=rules.txt
 # The name of the top level CMake file
 TopLevelCMakeFileName=toplevel.cmake.txt
 # The name of the source level CMake file
 SrcLevelCMakeFileName=srclevel.cmake.txt
-# By default, don't overwrite output files or directories
-ForceOverwrite=false
+
+[c]
+# The name of the subdirectory under ConfigFileDir
+Subdir=c
+# The name of the rules file
+RulesFileName=rules.txt
+# The name of the top level CMake file
+TopLevelCMakeFileName=toplevel.cmake.txt
+# The name of the source level CMake file
+SrcLevelCMakeFileName=srclevel.cmake.txt

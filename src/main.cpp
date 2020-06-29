@@ -38,14 +38,18 @@ static const std::string defaultconfigfilename{DATAFILE_DIR "/config/autoproject
 
 int main(int argc, char *argv[]) {
     std::string configfile{defaultconfigfilename};
-    struct {
-        std::string configfiledir;
+    struct LangConfig {
         std::string rulesfilename;
         std::string toplevelcmakefilename;
         std::string srclevelcmakefilename;
+    };
+
+    struct {
+        std::string configfiledir;
         bool forceOverwrite = false;
         bool license = false;
         bool help = false;
+        std::map<std::string, LangConfig> lang;
     } configuration;
 
     // handle command line arguments
@@ -122,9 +126,13 @@ int main(int argc, char *argv[]) {
         }
     }
     configuration.configfiledir = cfg.get_value("General", "ConfigFileDir");
-    configuration.rulesfilename = configuration.configfiledir + "/" + cfg.get_value("General", "RulesFileName");
-    configuration.toplevelcmakefilename = configuration.configfiledir + "/" + cfg.get_value("General", "TopLevelCMakeFileName");
-    configuration.srclevelcmakefilename = configuration.configfiledir + "/" + cfg.get_value("General", "SrcLevelCMakeFileName");
+    configuration.lang["c++"].rulesfilename = configuration.configfiledir + "/" + cfg.get_value("c++", "Subdir") + "/" + cfg.get_value("c++", "RulesFileName");
+    configuration.lang["c++"].toplevelcmakefilename = configuration.configfiledir + "/" + cfg.get_value("c++", "Subdir") + "/" + cfg.get_value("c++", "TopLevelCMakeFileName");
+    configuration.lang["c++"].srclevelcmakefilename = configuration.configfiledir + "/" + cfg.get_value("c++", "Subdir") + "/" + cfg.get_value("c++", "SrcLevelCMakeFileName");
+
+    configuration.lang["c"].rulesfilename = configuration.configfiledir + "/" + cfg.get_value("c", "Subdir") + "/" + cfg.get_value("c", "RulesFileName");
+    configuration.lang["c"].toplevelcmakefilename = configuration.configfiledir + "/" + cfg.get_value("c", "Subdir") + "/" + cfg.get_value("c", "TopLevelCMakeFileName");
+    configuration.lang["c"].srclevelcmakefilename = configuration.configfiledir + "/" + cfg.get_value("c", "Subdir") + "/" + cfg.get_value("c", "SrcLevelCMakeFileName");
 
     if (argc - processed_args != 2) {
         std::cerr << "Usage: autoproject project.md\nCreates a CMake build tree under 'project' subdirectory\n";
@@ -136,9 +144,9 @@ int main(int argc, char *argv[]) {
     AutoProject ap;
     try {
         ap.open(argv[processed_args + 1], 
-                configuration.rulesfilename, 
-                configuration.toplevelcmakefilename,
-                configuration.srclevelcmakefilename
+                configuration.lang["c++"].rulesfilename, 
+                configuration.lang["c++"].toplevelcmakefilename,
+                configuration.lang["c++"].srclevelcmakefilename
         );
     }
     catch(std::exception& e) {

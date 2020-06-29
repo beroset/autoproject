@@ -23,22 +23,13 @@ configure_file (
     "${PROJECT_BINARY_DIR}/config.h"
 )
 
-configure_file (
-    "${PROJECT_SOURCE_DIR}/config/autoproject.conf.in"
-    "${PROJECT_BINARY_DIR}/autoproject.conf"
-)
-
-configure_file (
-    "${PROJECT_SOURCE_DIR}/config/autoprojecttest.conf.in"
-    "${PROJECT_BINARY_DIR}/autoprojecttest.conf"
-)
-
 # add the binary tree to the search path for include files
 # so that we will find config.h
 include_directories("${PROJECT_BINARY_DIR}")
 
 add_subdirectory(src)
 add_subdirectory(bin)
+add_subdirectory(config)
 
 if (WITH_TEST)
     enable_testing()
@@ -46,8 +37,4 @@ if (WITH_TEST)
 endif() 
 
 INCLUDE(InstallRequiredSystemLibraries)
-INSTALL(FILES config/rules.txt DESTINATION share/autoproject/config)
-INSTALL(FILES config/toplevel.cmake.txt DESTINATION share/autoproject/config)
-INSTALL(FILES config/srclevel.cmake.txt DESTINATION share/autoproject/config)
-INSTALL(FILES "${PROJECT_BINARY_DIR}/autoproject.conf" DESTINATION share/autoproject/config)
 include(CPack)
