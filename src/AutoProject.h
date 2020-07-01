@@ -36,7 +36,6 @@ public:
     AutoProject() = default;
     AutoProject(fs::path mdFilename, std::map<std::string, LangConfig> lang);
     void open(fs::path mdFilename, std::map<std::string, LangConfig> lang);
-    //fs::path rulesfilename, fs::path toplevelfilename, fs::path srclevelfilename);
     // create the project
     bool createProject(bool overwrite);
     /// print final status to `out`
@@ -53,7 +52,11 @@ private:
     void checkRules(const std::string &line);
     void checkLanguageTags(const std::string& line);
 
+    // full path to input md file, e.g. "/tmp/248232.md"
     fs::path mdfile;
+    // output directory name, e.g. "/tmp/248232"
+    fs::path outdir;
+    // project name, e.g. "248232"
     std::string projname;
     std::string srcdir;
     std::ifstream in;

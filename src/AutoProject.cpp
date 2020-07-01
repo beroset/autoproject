@@ -56,8 +56,9 @@ void AutoProject::open(fs::path mdFilename, std::map<std::string, LangConfig> la
 
 AutoProject::AutoProject(fs::path mdFilename, std::map<std::string, LangConfig> lang) :
     mdfile{mdFilename},
+    outdir{mdFilename.replace_extension("")},
     projname{mdfile.stem().string()},
-    srcdir{projname + "/src"},
+    srcdir{outdir.string() + "/src"},
     in{mdfile},
     lang{lang}
 {
@@ -161,9 +162,10 @@ bool AutoProject::createProject(bool overwrite) {
                     }
                 }
             } else {
-                if (!isEmptyOrUnderline(line))
+                if (!isEmptyOrUnderline(line)) {
                     checkLanguageTags(line);
                     std::swap(prevline, line);
+                }
             }
         }
     }
@@ -179,17 +181,18 @@ bool AutoProject::createProject(bool overwrite) {
 }
 
 void AutoProject::makeTree(bool overwrite) {
+    fs::path builddir{outdir.string() + "/build"};
     if (overwrite) {
         fs::create_directories(srcdir);
-        fs::create_directories(projname + "/build");
+        fs::create_directories(builddir);
     } else {
-        if (fs::exists(projname)) {
-            throw std::runtime_error(projname + " already exists: will not overwrite.");
+        if (fs::exists(outdir)) {
+            throw std::runtime_error(outdir.string() + " already exists: will not overwrite.");
         }
         if (!fs::create_directories(srcdir)) {
             throw std::runtime_error("Cannot create directory "s + srcdir);
         }
-        fs::create_directories(projname + "/build");
+        fs::create_directories(builddir);
     }
 }
 
@@ -234,7 +237,7 @@ void AutoProject::writeTopLevel() const {
         std::cerr << "Error: cannot open top level filename \"" << toplevelfilename << "\"\n";
         exit(1);
     }
-    std::ofstream topcmake{projname + "/CMakeLists.txt"};
+    std::ofstream topcmake{outdir.string() + "/CMakeLists.txt"};
     std::string line;
     while (std::getline(in, line)) {
         topcmake << std::regex_replace(line, projname_regex, projname) << '\n';
@@ -269,7 +272,7 @@ void AutoProject::checkLanguageTags(const std::string& line) {
 }
 
 std::ostream& operator<<(std::ostream& out, const AutoProject &ap) {
-    out << "Successfully extracted the following source files:\n";
+    out << "Successfully extracted the following source files to " << ap.outdir << ":\n";
     std::copy(ap.srcnames.begin(), ap.srcnames.end(), std::ostream_iterator<fs::path>(out, "\n"));
     return out;
 }
