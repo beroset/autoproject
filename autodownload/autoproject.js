@@ -12,7 +12,7 @@
   /**
    * Given a URL to a Code Review question, extract the
    * question number and insert an extra pink button
-   * next to the C++ tag at the bottom of the question.
+   * next to the C or C++ tag at the bottom of the question.
    */
   function insertAutoproject() {
     var question=document.querySelector('div#question');
@@ -29,7 +29,7 @@
     });
     myButton.style.backgroundColor = "pink";
     myButton.textContent = "AutoProject";
-    el=document.querySelector('a.post-tag[href$="c%2b%2b"][rel="tag"]');
+    el=document.querySelector('a.post-tag[href$="c%2b%2b"][rel="tag"], a.post-tag[href$="c"][rel="tag"]');
     el.insertAdjacentElement('afterend', myButton);
   }
   insertAutoproject();
