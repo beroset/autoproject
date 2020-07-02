@@ -57,10 +57,12 @@ int main(int argc, char *argv[]) {
     std::map<std::string, std::string&> stringargs{
         { "--configfile", configfile},
     };
-    std::map<std::string, std::string> shortargs{
-        { "-c", "--configfile" },
+    std::map<std::string, std::string> shortboolargs{
         { "-f", "--forceoverwrite" },
         { "-L", "--license" },
+    };
+    std::map<std::string, std::string> shortstringargs{
+        { "-c", "--configfile" },
     };
     // TODO: make a more rational system for command line args
     // Specifically, command line args should override config file.
@@ -82,16 +84,16 @@ int main(int argc, char *argv[]) {
             processed_args += 2;
         }
 
-        auto shortoption = shortargs.find(argv[i]);
-        if (shortoption != shortargs.end()) {
+        auto shortoption = shortboolargs.find(argv[i]);
+        if (shortoption != shortboolargs.end()) {
             std::cout << "Found option " << shortoption->first << '\n';
             option = boolargs.find(shortoption->second);
             option->second = true;
             ++processed_args;
         }
 
-        auto shortstroption = shortargs.find(argv[i]);
-        if (shortstroption != shortargs.end()) {
+        auto shortstroption = shortstringargs.find(argv[i]);
+        if (shortstroption != shortstringargs.end()) {
             std::cout << "Found option " << shortoption->first << '\n';
             stroption = stringargs.find(shortstroption->second);
             stroption->second = argv[++i];
