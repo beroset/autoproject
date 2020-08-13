@@ -30,6 +30,6 @@
 \s*#include\s*<boost/filesystem.hpp>@find_package(Boost REQUIRED COMPONENTS filesystem)@${Boost_LIBRARIES}
 \s*#include\s*<png.h>@find_package(PNG REQUIRED)@${PNG_LIBRARIES}
 \s*#include\s*<ncurses.h>@find_package(Curses REQUIRED)@${CURSES_LIBRARIES}
-\s*#include\s*<SDL2.SDL.h>@include(FindPkgConfig)\nPKG_SEARCH_MODULE(SDL2 REQUIRED sdl2)\nINCLUDE_DIRECTORIES(${SDL2_INCLUDE_DIRS})@${SDL2_LIBRARIES}
+\s*#include\s*<SDL2/SDL.h>@include(FindPkgConfig)\nPKG_SEARCH_MODULE(SDL2 REQUIRED sdl2)\nINCLUDE_DIRECTORIES(${SDL2_INCLUDE_DIRS})@${SDL2_LIBRARIES}
 \s*#include\s*<(QString|Qwidget|QApplication)>@find_package(Qt5Widgets)\nset(CMAKE_AUTOMOC ON)\nset(CMAKE_AUTOUIC ON)\nset(CMAKE_INCLUDE_CURRENT_DIR ON)@Qt5::Widgets Qt5::Core
 \s*#include\s*<openssl/ssl.h>@find_package(OpenSSL REQUIRED)@${OPENSSL_LIBRARIES}
