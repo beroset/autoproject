@@ -1,13 +1,14 @@
 cmake_minimum_required(VERSION 3.1)
-project(autoproject)
+if (POLICY CMP0048)
+  cmake_policy(SET CMP0048 NEW)
+endif (POLICY CMP0048)
+
+project(autoproject VERSION 2.1.0)
 set(CMAKE_CXX_STANDARD 17)
-set(CPACK_PACKAGE_VERSION_MAJOR "2")
-set(CPACK_PACKAGE_VERSION_MINOR "0")
-set(CPACK_PACKAGE_VERSION_PATCH "0")
 set (CPACK_RESOURCE_FILE_LICENSE  
      "${CMAKE_CURRENT_SOURCE_DIR}/LICENSE")
 set(CPACK_PACKAGE_VENDOR "beroset")
-SET(CPACK_SOURCE_IGNORE_FILES "/build/;/*.swp;.git*")
+set(CPACK_SOURCE_IGNORE_FILES "/build/;/*.swp;.git*")
 set(CPACK_PACKAGE_NAME autoproject)
 
 # defines CMAKE_INSTALL_DATADIR and friends
@@ -26,6 +27,9 @@ configure_file (
 # add the binary tree to the search path for include files
 # so that we will find config.h
 include_directories("${PROJECT_BINARY_DIR}")
+
+# Create the documentation 
+add_subdirectory(doc)
 
 add_subdirectory(src)
 add_subdirectory(bin)
