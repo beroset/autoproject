@@ -117,9 +117,11 @@ bool AutoProject::createProject(bool overwrite) {
                 } else {
                     if (thislang == "c") {
                         srcfilename = fs::path(srcdir) / "main.c";
-                    } else {
+                    } else if (thislang == "c++") {
                         srcfilename = fs::path(srcdir) / "main.cpp";
-                    }
+                    } else if (thislang == "asm") {
+                        srcfilename = fs::path(srcdir) / "main.asm";
+                    } 
                 }
                 if (firstFile) {
                     makeTree(overwrite);
@@ -150,8 +152,10 @@ bool AutoProject::createProject(bool overwrite) {
                     firstFile = false;
                     if (thislang == "c") {
                         srcfilename = fs::path(srcdir) / "main.c";
-                    } else {
+                    } else if (thislang == "c++") {
                         srcfilename = fs::path(srcdir) / "main.cpp";
+                    } else if (thislang == "asm") {
+                        srcfilename = fs::path(srcdir) / "main.asm";
                     }
                     srcfile.open(srcfilename);
                     if (srcfile) {
@@ -257,6 +261,7 @@ void AutoProject::checkRules(const std::string &line) {
 void AutoProject::checkLanguageTags(const std::string& line) {
     static const std::regex tagcpp{"### tags: \\[.*'c\\+\\+'.*\\]"}; 
     static const std::regex tagc{"### tags: \\[.*'c'.*\\]"}; 
+    static const std::regex tagasm{"### tags: \\[.*'assembly'.*\\]"}; 
     std::smatch pieces;
     if (std::regex_match(line, pieces, tagcpp)) {
         thislang = "c++";
@@ -265,6 +270,11 @@ void AutoProject::checkLanguageTags(const std::string& line) {
         srclevelfilename = lang[thislang].srclevelcmakefilename;
     } else if (std::regex_match(line, pieces, tagc)) {
         thislang = "c";
+        rules = loadrules(lang[thislang].rulesfilename);
+        toplevelfilename = lang[thislang].toplevelcmakefilename;
+        srclevelfilename = lang[thislang].srclevelcmakefilename;
+    } else if (std::regex_match(line, pieces, tagasm)) {
+        thislang = "asm";
         rules = loadrules(lang[thislang].rulesfilename);
         toplevelfilename = lang[thislang].toplevelcmakefilename;
         srclevelfilename = lang[thislang].srclevelcmakefilename;
@@ -281,7 +291,7 @@ std::ostream& operator<<(std::ostream& out, const AutoProject &ap) {
 
 /// returns true if passed file extension is an identified source code extension.
 bool isSourceExtension(const std::string_view ext) {
-    static const std::unordered_set<std::string_view> source_extensions{".cpp", ".c", ".h", ".hpp"};
+    static const std::unordered_set<std::string_view> source_extensions{".cpp", ".c", ".h", ".hpp", ".asm"};
     return source_extensions.find(ext) != source_extensions.end();
 }
 

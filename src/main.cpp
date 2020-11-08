@@ -132,6 +132,10 @@ int main(int argc, char *argv[]) {
     configuration.lang["c"].toplevelcmakefilename = configuration.configfiledir + "/" + cfg.get_value("c", "Subdir") + "/" + cfg.get_value("c", "TopLevelCMakeFileName");
     configuration.lang["c"].srclevelcmakefilename = configuration.configfiledir + "/" + cfg.get_value("c", "Subdir") + "/" + cfg.get_value("c", "SrcLevelCMakeFileName");
 
+    configuration.lang["asm"].rulesfilename = configuration.configfiledir + "/" + cfg.get_value("asm", "Subdir") + "/" + cfg.get_value("asm", "RulesFileName");
+    configuration.lang["asm"].toplevelcmakefilename = configuration.configfiledir + "/" + cfg.get_value("asm", "Subdir") + "/" + cfg.get_value("asm", "TopLevelCMakeFileName");
+    configuration.lang["asm"].srclevelcmakefilename = configuration.configfiledir + "/" + cfg.get_value("asm", "Subdir") + "/" + cfg.get_value("asm", "SrcLevelCMakeFileName");
+
     if (argc - processed_args != 2) {
         std::cerr << "Usage: autoproject project.md\nCreates a CMake build tree under 'project' subdirectory\n";
         for (int i=processed_args+1; i < argc; ++i) {
