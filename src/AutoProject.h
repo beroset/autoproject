@@ -1,7 +1,7 @@
 #ifndef AUTOPROJECT_H
 #define AUTOPROJECT_H
+#include "config.h"
 #include <exception>
-#include <filesystem>
 #include <fstream>
 #include <functional>
 #include <map>
@@ -9,7 +9,13 @@
 #include <string_view>
 #include <unordered_set>
 
+#if HAS_FILESYSTEM
+#include <filesystem>
 namespace fs = std::filesystem;
+#else
+#include <experimental/filesystem>
+namespace fs = std::experimental::filesystem;
+#endif
 
 struct path_hash {
     std::size_t operator()(const fs::path &path) const {
