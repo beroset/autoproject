@@ -17,6 +17,9 @@ include(GNUInstallDirs)
 # options off-by-default that you can enable
 option(WITH_TEST "Build the test suite" OFF)
 
+# options on-by-default that you can disable
+option(BUILD_DOCS "Build the documentation" ON)
+
 # configure a header file to pass some of the CMake settings
 # to the source code
 configure_file (
@@ -28,8 +31,10 @@ configure_file (
 # so that we will find config.h
 include_directories("${PROJECT_BINARY_DIR}")
 
-# Create the documentation 
-add_subdirectory(doc)
+# Create the documentation
+if (BUILD_DOCS)
+    add_subdirectory(doc)
+endif()
 
 add_subdirectory(src)
 add_subdirectory(bin)
