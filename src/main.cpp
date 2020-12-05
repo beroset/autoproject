@@ -35,6 +35,9 @@ constexpr std::string_view license{R"(
 )"};
 
 static const std::string defaultconfigfilename{DATAFILE_DIR "/config/autoproject.conf"};
+static constexpr std::string_view version{"autoproject " VERSION};
+static constexpr std::string_view usage{"Usage: autoproject project.md\n"
+    "Creates a CMake build tree under 'project' subdirectory\n"};
 
 int main(int argc, char *argv[]) {
     std::string configfile{defaultconfigfilename};
@@ -44,6 +47,7 @@ int main(int argc, char *argv[]) {
         bool forceOverwrite = false;
         bool license = false;
         bool help = false;
+        bool version = false;
         std::map<std::string, LangConfig> lang;
     } configuration;
 
@@ -52,6 +56,7 @@ int main(int argc, char *argv[]) {
         { "--forceoverwrite", configuration.forceOverwrite },
         { "--license", configuration.license },
         { "--help", configuration.help },
+        { "--version", configuration.version },
     };
     // TODO: use this to allow override of configuration file
     std::map<std::string, std::string&> stringargs{
@@ -60,6 +65,8 @@ int main(int argc, char *argv[]) {
     std::map<std::string, std::string> shortboolargs{
         { "-f", "--forceoverwrite" },
         { "-L", "--license" },
+        { "-h", "--help" },
+        { "-v", "--version" },
     };
     std::map<std::string, std::string> shortstringargs{
         { "-c", "--configfile" },
@@ -104,7 +111,11 @@ int main(int argc, char *argv[]) {
         std::cout << license;
     }
     if (configuration.help) {
-        std::cout << "Usage ....\n";
+        std::cout << usage; 
+        return 0;
+    }
+    if (configuration.version) {
+        std::cout << version << '\n'; 
         return 0;
     }
     std::ifstream config{configfile};
@@ -114,8 +125,9 @@ int main(int argc, char *argv[]) {
     }
     ConfigFile cfg{config};
 
-    if (std::stoi(cfg.get_value("General", "Version")) != VERSION_MAJOR) {
-        std::cerr << "Error: version in " << configfile << " does not equal " << VERSION_MAJOR << "\n";
+    auto reportedVersion{cfg.get_value("General", "Version")};
+    if (reportedVersion != std::to_string(VERSION_MAJOR)) {
+        std::cerr << "Error: version in " << configfile << "\nreports that the config file is version \"" << reportedVersion << "\" but this program is version \"" << VERSION_MAJOR << "\"\n";
     } else if (!configuration.forceOverwrite) {
         auto over{cfg.get_value("General", "ForceOverwrite")};
         if (over == "true" || over == "TRUE" || over == "True") {
@@ -137,7 +149,7 @@ int main(int argc, char *argv[]) {
     configuration.lang["asm"].srclevelcmakefilename = configuration.configfiledir + "/" + cfg.get_value("asm", "Subdir") + "/" + cfg.get_value("asm", "SrcLevelCMakeFileName");
 
     if (argc - processed_args != 2) {
-        std::cerr << "Usage: autoproject project.md\nCreates a CMake build tree under 'project' subdirectory\n";
+        std::cerr << usage; 
         for (int i=processed_args+1; i < argc; ++i) {
             std::cout << "argv[" << i << "] = \"" << argv[i] << "\"\n";
         }
