@@ -72,6 +72,7 @@ endif()
 add_subdirectory(src)
 add_subdirectory(bin)
 add_subdirectory(config)
+add_subdirectory(autodownload)
 
 if (WITH_TEST)
     enable_testing()
