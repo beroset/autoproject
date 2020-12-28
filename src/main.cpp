@@ -139,14 +139,23 @@ int main(int argc, char *argv[]) {
     configuration.lang["c++"].rulesfilename = configuration.configfiledir + "/" + cfg.get_value("c++", "Subdir") + "/" + cfg.get_value("c++", "RulesFileName");
     configuration.lang["c++"].toplevelcmakefilename = configuration.configfiledir + "/" + cfg.get_value("c++", "Subdir") + "/" + cfg.get_value("c++", "TopLevelCMakeFileName");
     configuration.lang["c++"].srclevelcmakefilename = configuration.configfiledir + "/" + cfg.get_value("c++", "Subdir") + "/" + cfg.get_value("c++", "SrcLevelCMakeFileName");
+    if (cfg.has_value("c++", "CloneDir")) {
+        configuration.lang["c++"].clonedir = configuration.configfiledir + "/" + cfg.get_value("c++", "Subdir") + "/" + cfg.get_value("c++", "CloneDir");
+    }
 
     configuration.lang["c"].rulesfilename = configuration.configfiledir + "/" + cfg.get_value("c", "Subdir") + "/" + cfg.get_value("c", "RulesFileName");
     configuration.lang["c"].toplevelcmakefilename = configuration.configfiledir + "/" + cfg.get_value("c", "Subdir") + "/" + cfg.get_value("c", "TopLevelCMakeFileName");
     configuration.lang["c"].srclevelcmakefilename = configuration.configfiledir + "/" + cfg.get_value("c", "Subdir") + "/" + cfg.get_value("c", "SrcLevelCMakeFileName");
+    if (cfg.has_value("c", "CloneDir")) {
+        configuration.lang["c"].clonedir = configuration.configfiledir + "/" + cfg.get_value("c", "Subdir") + "/" + cfg.get_value("c", "CloneDir");
+    }
 
     configuration.lang["asm"].rulesfilename = configuration.configfiledir + "/" + cfg.get_value("asm", "Subdir") + "/" + cfg.get_value("asm", "RulesFileName");
     configuration.lang["asm"].toplevelcmakefilename = configuration.configfiledir + "/" + cfg.get_value("asm", "Subdir") + "/" + cfg.get_value("asm", "TopLevelCMakeFileName");
     configuration.lang["asm"].srclevelcmakefilename = configuration.configfiledir + "/" + cfg.get_value("asm", "Subdir") + "/" + cfg.get_value("asm", "SrcLevelCMakeFileName");
+    if (cfg.has_value("asm", "CloneDir")) {
+        configuration.lang["asm"].clonedir = configuration.configfiledir + "/" + cfg.get_value("asm", "Subdir") + "/" + cfg.get_value("asm", "CloneDir");
+    }
 
     if (argc - processed_args != 2) {
         std::cerr << usage; 

@@ -16,6 +16,8 @@ RulesFileName=rules.txt
 TopLevelCMakeFileName=toplevel.cmake.txt
 # The name of the source level CMake file
 SrcLevelCMakeFileName=srclevel.cmake.txt
+# The name of any directories to clone verbatim (optional)
+CloneDir=doc
 
 [c]
 # The name of the subdirectory under ConfigFileDir
@@ -26,6 +28,8 @@ RulesFileName=rules.txt
 TopLevelCMakeFileName=toplevel.cmake.txt
 # The name of the source level CMake file
 SrcLevelCMakeFileName=srclevel.cmake.txt
+# The name of any directories to clone verbatim (optional)
+CloneDir=doc
 
 [asm]
 # The name of the subdirectory under ConfigFileDir

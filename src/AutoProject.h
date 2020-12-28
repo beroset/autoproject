@@ -35,6 +35,7 @@ struct LangConfig {
     fs::path rulesfilename;
     fs::path toplevelcmakefilename;
     fs::path srclevelcmakefilename;
+    fs::path clonedir;
 };
 
 class AutoProject {
@@ -49,6 +50,7 @@ public:
 
 private:
     void writeTopLevel() const;
+    void copyCloneDir() const;
     void writeSrcLevel() const;
     void makeTree(bool overwrite);
     /*! check the passed line against the rule set.
@@ -68,6 +70,7 @@ private:
     std::ifstream in;
     fs::path toplevelfilename;
     fs::path srclevelfilename;
+    fs::path clonedir;
     std::unordered_set<fs::path, path_hash> srcnames;
     std::unordered_set<std::string> extraRules;
     std::unordered_set<std::string> libraries;

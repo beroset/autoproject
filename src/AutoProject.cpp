@@ -176,6 +176,7 @@ bool AutoProject::createProject(bool overwrite) {
     in.close();
     if (!srcnames.empty()) {
         writeSrcLevel();
+        copyCloneDir();
         writeTopLevel();
         // copy md file to projname/src
         auto options = overwrite ? fs::copy_options::overwrite_existing : fs::copy_options::none;
@@ -234,6 +235,12 @@ void AutoProject::writeSrcLevel() const {
     }
 }
 
+void AutoProject::copyCloneDir() const {
+    if (!clonedir.empty()) {
+        fs::copy(clonedir, outdir.string(), fs::copy_options::recursive);
+    }
+}
+
 void AutoProject::writeTopLevel() const {
     static const std::regex projname_regex{"[{]projname[}]"};
     std::ifstream in{toplevelfilename};
@@ -268,16 +275,19 @@ void AutoProject::checkLanguageTags(const std::string& line) {
         rules = loadrules(lang[thislang].rulesfilename);
         toplevelfilename = lang[thislang].toplevelcmakefilename;
         srclevelfilename = lang[thislang].srclevelcmakefilename;
+        clonedir = lang[thislang].clonedir;
     } else if (std::regex_match(line, pieces, tagc)) {
         thislang = "c";
         rules = loadrules(lang[thislang].rulesfilename);
         toplevelfilename = lang[thislang].toplevelcmakefilename;
         srclevelfilename = lang[thislang].srclevelcmakefilename;
+        clonedir = lang[thislang].clonedir;
     } else if (std::regex_match(line, pieces, tagasm)) {
         thislang = "asm";
         rules = loadrules(lang[thislang].rulesfilename);
         toplevelfilename = lang[thislang].toplevelcmakefilename;
         srclevelfilename = lang[thislang].srclevelcmakefilename;
+        clonedir = lang[thislang].clonedir;
     }
 }
 

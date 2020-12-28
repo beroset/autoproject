@@ -1,7 +1,7 @@
 # configuration file for autoproject test
 [General]
 # Version must match the major version number for autoproject
-Version=@CPACK_PACKAGE_VERSION_MAJOR@
+Version=@CPACK_VERSION_MAJOR@
 # This is the directory in which all other configuration files are located
 ConfigFileDir=${CMAKE_SOURCE_DIR}/config
 # By default, don't overwrite output files or directories
@@ -26,3 +26,5 @@ RulesFileName=rules.txt
 TopLevelCMakeFileName=toplevel.cmake.txt
 # The name of the source level CMake file
 SrcLevelCMakeFileName=srclevel.cmake.txt
+# The name of any directories to clone verbatim (optional)
+CloneDir=doc
