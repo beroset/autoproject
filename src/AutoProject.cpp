@@ -266,6 +266,8 @@ void AutoProject::checkRules(const std::string &line) {
 }
 
 void AutoProject::checkLanguageTags(const std::string& line) {
+    if (!thislang.empty()) 
+        return;
     static const std::regex tagcpp{"### tags: \\[.*'c\\+\\+'.*\\]"}; 
     static const std::regex tagc{"### tags: \\[.*'c'.*\\]"}; 
     static const std::regex tagasm{"### tags: \\[.*'assembly'.*\\]"}; 
@@ -276,8 +278,8 @@ void AutoProject::checkLanguageTags(const std::string& line) {
         thislang = "c";
     } else if (std::regex_match(line, pieces, tagasm)) {
         thislang = "asm";
-    } else {   // default to C++ if none of the above
-        thislang = "c++";
+    } else {
+        return;
     }
     rules = loadrules(lang[thislang].rulesfilename);
     configdir = lang[thislang].configdir;
