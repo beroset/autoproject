@@ -6,7 +6,7 @@ browser.runtime.onMessage.addListener(log_md);
  * StackExchange API version 2.2.
  */
 function make_URL(qnumber) {
-    return `https://api.stackexchange.com/2.2/questions/${qnumber}/?order=desc&sort=activity&site=codereview&filter=!)5IYc5cM9scVj-ftqnOnMD(3TmXe`;
+    return `https://api.stackexchange.com/2.2/questions/${qnumber}/?order=desc&sort=activity&site=codereview&filter=!)5IYc5cM9scVj-ftqnOnMD(3TmXe&key=1zS9hPycH2IKPkjCZh5OUw((`;
 }
 
 /**
