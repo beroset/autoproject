@@ -237,7 +237,7 @@ void AutoProject::writeSrcLevel() const {
 
 void AutoProject::copyCloneDir() const {
     if (!clonedir.empty()) {
-        fs::copy(clonedir, outdir.string(), fs::copy_options::recursive);
+        fs::copy(configdir / clonedir, outdir.string() / clonedir, fs::copy_options::recursive);
     }
 }
 
@@ -272,23 +272,18 @@ void AutoProject::checkLanguageTags(const std::string& line) {
     std::smatch pieces;
     if (std::regex_match(line, pieces, tagcpp)) {
         thislang = "c++";
-        rules = loadrules(lang[thislang].rulesfilename);
-        toplevelfilename = lang[thislang].toplevelcmakefilename;
-        srclevelfilename = lang[thislang].srclevelcmakefilename;
-        clonedir = lang[thislang].clonedir;
     } else if (std::regex_match(line, pieces, tagc)) {
         thislang = "c";
-        rules = loadrules(lang[thislang].rulesfilename);
-        toplevelfilename = lang[thislang].toplevelcmakefilename;
-        srclevelfilename = lang[thislang].srclevelcmakefilename;
-        clonedir = lang[thislang].clonedir;
     } else if (std::regex_match(line, pieces, tagasm)) {
         thislang = "asm";
-        rules = loadrules(lang[thislang].rulesfilename);
-        toplevelfilename = lang[thislang].toplevelcmakefilename;
-        srclevelfilename = lang[thislang].srclevelcmakefilename;
-        clonedir = lang[thislang].clonedir;
+    } else {   // default to C++ if none of the above
+        thislang = "c++";
     }
+    rules = loadrules(lang[thislang].rulesfilename);
+    configdir = lang[thislang].configdir;
+    toplevelfilename = lang[thislang].toplevelcmakefilename;
+    srclevelfilename = lang[thislang].srclevelcmakefilename;
+    clonedir = lang[thislang].clonedir;
 }
 
 std::ostream& operator<<(std::ostream& out, const AutoProject &ap) {

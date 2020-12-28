@@ -39,6 +39,23 @@ static constexpr std::string_view version{"autoproject " VERSION};
 static constexpr std::string_view usage{"Usage: autoproject project.md\n"
     "Creates a CMake build tree under 'project' subdirectory\n"};
 
+std::map<std::string, LangConfig> fetchLanguageSettings(const ConfigFile &cfg) {
+    std::map<std::string, LangConfig> lang;
+    auto configfiledir = cfg.get_value("General", "ConfigFileDir");
+    for (const auto& section : cfg) {
+        if (section.first != "general") {
+            fs::path basedir = lang[section.first].configdir = configfiledir + "/" + cfg.get_value(section.first, "Subdir");
+            lang[section.first].rulesfilename = basedir / cfg.get_value(section.first, "RulesFileName");
+            lang[section.first].toplevelcmakefilename = basedir / cfg.get_value(section.first, "TopLevelCMakeFileName");
+            lang[section.first].srclevelcmakefilename = basedir / cfg.get_value(section.first, "SrcLevelCMakeFileName");
+            if (cfg.has_value(section.first, "CloneDir")) {
+                lang[section.first].clonedir = cfg.get_value(section.first, "CloneDir");
+            }
+        }
+    }
+    return lang;
+}
+
 int main(int argc, char *argv[]) {
     std::string configfile{defaultconfigfilename};
 
@@ -134,28 +151,7 @@ int main(int argc, char *argv[]) {
             configuration.forceOverwrite = true;
         }
     }
-    configuration.configfiledir = cfg.get_value("General", "ConfigFileDir");
-    // TODO: fix this to be less wordy and more concise
-    configuration.lang["c++"].rulesfilename = configuration.configfiledir + "/" + cfg.get_value("c++", "Subdir") + "/" + cfg.get_value("c++", "RulesFileName");
-    configuration.lang["c++"].toplevelcmakefilename = configuration.configfiledir + "/" + cfg.get_value("c++", "Subdir") + "/" + cfg.get_value("c++", "TopLevelCMakeFileName");
-    configuration.lang["c++"].srclevelcmakefilename = configuration.configfiledir + "/" + cfg.get_value("c++", "Subdir") + "/" + cfg.get_value("c++", "SrcLevelCMakeFileName");
-    if (cfg.has_value("c++", "CloneDir")) {
-        configuration.lang["c++"].clonedir = configuration.configfiledir + "/" + cfg.get_value("c++", "Subdir") + "/" + cfg.get_value("c++", "CloneDir");
-    }
-
-    configuration.lang["c"].rulesfilename = configuration.configfiledir + "/" + cfg.get_value("c", "Subdir") + "/" + cfg.get_value("c", "RulesFileName");
-    configuration.lang["c"].toplevelcmakefilename = configuration.configfiledir + "/" + cfg.get_value("c", "Subdir") + "/" + cfg.get_value("c", "TopLevelCMakeFileName");
-    configuration.lang["c"].srclevelcmakefilename = configuration.configfiledir + "/" + cfg.get_value("c", "Subdir") + "/" + cfg.get_value("c", "SrcLevelCMakeFileName");
-    if (cfg.has_value("c", "CloneDir")) {
-        configuration.lang["c"].clonedir = configuration.configfiledir + "/" + cfg.get_value("c", "Subdir") + "/" + cfg.get_value("c", "CloneDir");
-    }
-
-    configuration.lang["asm"].rulesfilename = configuration.configfiledir + "/" + cfg.get_value("asm", "Subdir") + "/" + cfg.get_value("asm", "RulesFileName");
-    configuration.lang["asm"].toplevelcmakefilename = configuration.configfiledir + "/" + cfg.get_value("asm", "Subdir") + "/" + cfg.get_value("asm", "TopLevelCMakeFileName");
-    configuration.lang["asm"].srclevelcmakefilename = configuration.configfiledir + "/" + cfg.get_value("asm", "Subdir") + "/" + cfg.get_value("asm", "SrcLevelCMakeFileName");
-    if (cfg.has_value("asm", "CloneDir")) {
-        configuration.lang["asm"].clonedir = configuration.configfiledir + "/" + cfg.get_value("asm", "Subdir") + "/" + cfg.get_value("asm", "CloneDir");
-    }
+    configuration.lang = fetchLanguageSettings(cfg);
 
     if (argc - processed_args != 2) {
         std::cerr << usage; 

@@ -32,6 +32,7 @@ public:
 };
 
 struct LangConfig {
+    fs::path configdir;
     fs::path rulesfilename;
     fs::path toplevelcmakefilename;
     fs::path srclevelcmakefilename;
@@ -68,6 +69,7 @@ private:
     std::string projname;
     std::string srcdir;
     std::ifstream in;
+    fs::path configdir;
     fs::path toplevelfilename;
     fs::path srclevelfilename;
     fs::path clonedir;
