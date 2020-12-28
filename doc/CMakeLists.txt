@@ -4,34 +4,35 @@ set(IMAGE_PATH "images")
 set(DEST_IMAGE_PATH "${CMAKE_BINARY_DIR}/${IMAGE_PATH}")
 if(DOXYGEN_FOUND)
     configure_file(
-        "${autoproject_SOURCE_DIR}/doc/doxygen.conf.in"
-        "${CMAKE_BINARY_DIR}/doxygen.conf"
+        "${CMAKE_CURRENT_SOURCE_DIR}/doxygen.conf.in"
+        "${CMAKE_CURRENT_BINARY_DIR}/doxygen.conf"
         @ONLY
     )
     configure_file(
-        "${autoproject_SOURCE_DIR}/doc/header.tex"
-        "${CMAKE_BINARY_DIR}/doc/header.tex"
+        "${CMAKE_CURRENT_SOURCE_DIR}/header.tex"
+        "${CMAKE_CURRENT_BINARY_DIR}/header.tex"
         COPYONLY
     )
     add_custom_target(
         doc
         "${DOXYGEN_EXECUTABLE}"
-        "${CMAKE_BINARY_DIR}/doxygen.conf"
-        WORKING_DIRECTORY "${CMAKE_BINARY_DIR}"
+        "${CMAKE_CURRENT_BINARY_DIR}/doxygen.conf"
+        OUTPUT  "${CMAKE_CURRENT_BINARY_DIR}/html/index.html"
+        WORKING_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}"
         DEPENDS "${MD_SOURCES}"
         DEPENDS "${DEST_IMAGE_PATH}/npn.png"
-        COMMENT "Generating API Reference documentation..." VERBATIM
+        COMMENT "Generating code documentation..." VERBATIM
     )
     add_custom_target(
         pdf
-        DEPENDS "${CMAKE_BINARY_DIR}/doc/latex/refman.pdf"
+        DEPENDS "${CMAKE_CURRENT_BINARY_DIR}/latex/refman.pdf"
     )
     add_custom_command(
-        OUTPUT  "${CMAKE_BINARY_DIR}/doc/latex/refman.pdf"
+        OUTPUT  "${CMAKE_CURRENT_BINARY_DIR}/latex/refman.pdf"
         COMMAND "make"
-        DEPENDS "doc"
-        WORKING_DIRECTORY "${CMAKE_BINARY_DIR}/doc/latex"
-        COMMENT "Generating PDF format Reference documentation..." VERBATIM
+        DEPENDS "${CMAKE_CURRENT_BINARY_DIR}/html/index.html"
+        WORKING_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/latex"
+        COMMENT "Generating PDF format code documentation..." VERBATIM
     )
     add_custom_command(
         OUTPUT "${DEST_IMAGE_PATH}/npn.png" 
