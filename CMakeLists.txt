@@ -34,10 +34,12 @@ if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
     endif()
 else()
     try_compile(HAS_FILESYSTEM "${CMAKE_BINARY_DIR}/temp" 
-        "${CMAKE_SOURCE_DIR}/compilertests/has_filesystem.cpp")
+        "${CMAKE_SOURCE_DIR}/compilertests/has_filesystem.cpp"
+        CMAKE_FLAGS -DCMAKE_CXX_STANDARD=17 -DCMAKE_CXX_STANDARD_REQUIRED=ON)
     if (NOT HAS_FILESYSTEM)
         try_compile(HAS_EXPERIMENTAL_FILESYSTEM "${CMAKE_BINARY_DIR}/temp" 
-            "${CMAKE_SOURCE_DIR}/compilertests/has_experimental_filesystem.cpp")
+            "${CMAKE_SOURCE_DIR}/compilertests/has_experimental_filesystem.cpp"
+            CMAKE_FLAGS -DCMAKE_CXX_STANDARD=17 -DCMAKE_CXX_STANDARD_REQUIRED=ON)
     endif()
 endif()
 
