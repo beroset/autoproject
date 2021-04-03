@@ -62,10 +62,6 @@ configure_file (
     "${PROJECT_BINARY_DIR}/config.h"
 )
 
-# add the binary tree to the search path for include files
-# so that we will find config.h
-include_directories("${PROJECT_BINARY_DIR}")
-
 # Create the documentation
 if (BUILD_DOCS)
     add_subdirectory(doc)
