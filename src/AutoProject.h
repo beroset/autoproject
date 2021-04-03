@@ -51,7 +51,7 @@ public:
 
 private:
     void writeTopLevel() const;
-    void copyCloneDir() const;
+    void copyCloneDir(bool overwrite) const;
     void writeSrcLevel() const;
     void makeTree(bool overwrite);
     /*! check the passed line against the rule set.

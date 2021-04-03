@@ -176,7 +176,7 @@ bool AutoProject::createProject(bool overwrite) {
     in.close();
     if (!srcnames.empty()) {
         writeSrcLevel();
-        copyCloneDir();
+        copyCloneDir(overwrite);
         writeTopLevel();
         // copy md file to projname/src
         auto options = overwrite ? fs::copy_options::overwrite_existing : fs::copy_options::none;
@@ -235,9 +235,10 @@ void AutoProject::writeSrcLevel() const {
     }
 }
 
-void AutoProject::copyCloneDir() const {
+void AutoProject::copyCloneDir(bool overwrite) const {
     if (!clonedir.empty()) {
-        fs::copy(configdir / clonedir, outdir.string() / clonedir, fs::copy_options::recursive);
+        auto options = overwrite ? fs::copy_options::overwrite_existing|fs::copy_options::recursive : fs::copy_options::recursive;
+        fs::copy(configdir / clonedir, outdir.string() / clonedir, options);
     }
 }
 
