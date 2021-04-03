@@ -1,13 +1,10 @@
-cmake_minimum_required(VERSION 3.7)
+cmake_minimum_required(VERSION 3.15)
 if (POLICY CMP0048)
   cmake_policy(SET CMP0048 NEW)
 endif (POLICY CMP0048)
 
 project(autoproject VERSION 2.3.0)
-set(CMAKE_CXX_STANDARD 17)
-set(CMAKE_CXX_STANDARD_REQUIRED ON)
-set (CPACK_RESOURCE_FILE_LICENSE  
-     "${CMAKE_CURRENT_SOURCE_DIR}/LICENSE")
+set(CPACK_RESOURCE_FILE_LICENSE "${CMAKE_CURRENT_SOURCE_DIR}/LICENSE")
 set(CPACK_PACKAGE_VENDOR "beroset")
 set(CPACK_SOURCE_IGNORE_FILES "/build/;/*.swp;.git*")
 set(CPACK_PACKAGE_NAME autoproject)
