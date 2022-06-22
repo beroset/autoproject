@@ -18,18 +18,23 @@
 #   of libraries is arbitrary.
 #
 \s*#include\s*<(experimental/)?filesystem>@@stdc++fs
-\s*#include\s*<(thread|future)>@find_package(Threads REQUIRED)@${CMAKE_THREAD_LIBS_INIT}
-\s*#include\s*<SFML/Graphics.hpp>@find_package(SFML REQUIRED COMPONENTS System Window Graphics)\ninclude_directories(${SFML_INCLUDE_DIR})@${SFML_LIBRARIES}
+\s*#include\s*<(thread|future|mutex)>@find_package(Threads REQUIRED)@${CMAKE_THREAD_LIBS_INIT}
+\s*#include\s*<SFML/Graphics.hpp>@find_package(SFML REQUIRED COMPONENTS graphics)@sfml-graphics
+\s*#include\s*<SFML/Window.hpp>@find_package(SFML REQUIRED COMPONENTS window)@sfml-window
+\s*#include\s*<SFML/Audio.hpp>@find_package(SFML REQUIRED COMPONENTS audio)@sfml-audio
+\s*#include\s*<SFML/Network.hpp>@find_package(SFML REQUIRED COMPONENTS network)@sfml-network
 \s*#include\s*<GL/glew.h>@find_package(GLEW REQUIRED)@${GLEW_LIBRARIES}
 \s*#include\s*<GL/glut.h>@find_package(GLUT REQUIRED)\nfind_package(OpenGL REQUIRED)@${OPENGL_LIBRARIES} ${GLUT_LIBRARIES}
 \s*#include\s*<OpenGL/gl.h>@find_package(OpenGL REQUIRED)@${OPENGL_LIBRARIES}
 \s*#include\s*<opencv2/opencv.hpp>@find_package(OpenCV REQUIRED)@${OpenCV_LIBRARIES}
 \s*#include\s*<SDL2/SDL_ttf.h>@find_package(SDL2_ttf REQUIRED)@${SDL2_TTF_LIBRARIES}
+\s*#include\s*<SDL2/SDL.h>@find_package(SDL2 REQUIRED)@${SDL2_LIBRARIES}
+\s*#include\s*<SDL.h>@find_package(SDL2 REQUIRED)@${SDL2_LIBRARIES}
 \s*#include\s*<GLFW/glfw3.h>@find_package(glfw3 REQUIRED)@glfw
 \s*#include\s*<boost/regex.hpp>@find_package(Boost REQUIRED COMPONENTS regex)@${Boost_LIBRARIES}
 \s*#include\s*<boost/filesystem.hpp>@find_package(Boost REQUIRED COMPONENTS filesystem)@${Boost_LIBRARIES}
 \s*#include\s*<png.h>@find_package(PNG REQUIRED)@${PNG_LIBRARIES}
 \s*#include\s*<ncurses.h>@find_package(Curses REQUIRED)@${CURSES_LIBRARIES}
 \s*#include\s*<SDL2/SDL.h>@include(FindPkgConfig)\nPKG_SEARCH_MODULE(SDL2 REQUIRED sdl2)\nINCLUDE_DIRECTORIES(${SDL2_INCLUDE_DIRS})@${SDL2_LIBRARIES}
-\s*#include\s*<(QString|Qwidget|QApplication)>@find_package(Qt5Widgets)\nset(CMAKE_AUTOMOC ON)\nset(CMAKE_AUTOUIC ON)\nset(CMAKE_INCLUDE_CURRENT_DIR ON)@Qt5::Widgets Qt5::Core
+\s*#include\s*<(QString|Qwidget|QApplication|QGuiApplication)>@find_package(Qt5 COMPONENTS Qml Quick Widgets REQUIRED)\nset(CMAKE_AUTOMOC ON)\nset(CMAKE_AUTOUIC ON)\nset(CMAKE_INCLUDE_CURRENT_DIR ON)@Qt5::Widgets Qt5::Core
 \s*#include\s*<openssl/ssl.h>@find_package(OpenSSL REQUIRED)@${OPENSSL_LIBRARIES}
