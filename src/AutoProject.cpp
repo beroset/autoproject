@@ -3,6 +3,7 @@
 #include <unordered_set>
 #include <algorithm>
 #include <iostream>
+#include <iterator>
 #include <regex>
 #include <sstream>
 #include <vector>
