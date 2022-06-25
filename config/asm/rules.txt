@@ -17,4 +17,4 @@
 #   multiple components, only a single instance will appear. The ordering
 #   of libraries is arbitrary.
 #
-#\s*#include\s*<(experimental/)?filesystem>@@stdc++fs
+\s*int\s*0x80\s?@set(CMAKE_ASM_NASM_OBJECT_FORMAT elf32)\nset(CMAKE_ASM_NASM_LINK_FLAGS ${ASM_NASM_LINK_FLAGS} -melf_i386)@
