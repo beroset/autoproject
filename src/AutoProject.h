@@ -8,14 +8,9 @@
 #include <string>
 #include <string_view>
 #include <unordered_set>
-
-#if HAS_FILESYSTEM
 #include <filesystem>
+
 namespace fs = std::filesystem;
-#else
-#include <experimental/filesystem>
-namespace fs = std::experimental::filesystem;
-#endif
 
 struct path_hash {
     std::size_t operator()(const fs::path &path) const {

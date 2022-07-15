@@ -7,14 +7,9 @@
 #include <regex>
 #include <string>
 #include <unordered_map>
-
-#if HAS_FILESYSTEM
 #include <filesystem>
+
 namespace fs = std::filesystem;
-#else
-#include <experimental/filesystem>
-namespace fs = std::experimental::filesystem;
-#endif
 
 // helper functions
 static std::string tolower(std::string str) {

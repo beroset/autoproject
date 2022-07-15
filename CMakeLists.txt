@@ -23,33 +23,17 @@ if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
         "${CMAKE_SOURCE_DIR}/compilertests/has_filesystem.cpp" 
         CMAKE_FLAGS -DCMAKE_CXX_STANDARD=17 -DCMAKE_CXX_STANDARD_REQUIRED=ON
         LINK_LIBRARIES stdc++fs)
-    if (NOT HAS_FILESYSTEM)
-        try_compile(HAS_EXPERIMENTAL_FILESYSTEM "${CMAKE_BINARY_DIR}/temp" 
-            "${CMAKE_SOURCE_DIR}/compilertests/has_experimental_filesystem.cpp" 
-            CMAKE_FLAGS -DCMAKE_CXX_STANDARD=17 -DCMAKE_CXX_STANDARD_REQUIRED=ON
-            LINK_LIBRARIES stdc++fs)
-    endif()
 else()
     try_compile(HAS_FILESYSTEM "${CMAKE_BINARY_DIR}/temp" 
         "${CMAKE_SOURCE_DIR}/compilertests/has_filesystem.cpp"
         CMAKE_FLAGS -DCMAKE_CXX_STANDARD=17 -DCMAKE_CXX_STANDARD_REQUIRED=ON)
-    if (NOT HAS_FILESYSTEM)
-        try_compile(HAS_EXPERIMENTAL_FILESYSTEM "${CMAKE_BINARY_DIR}/temp" 
-            "${CMAKE_SOURCE_DIR}/compilertests/has_experimental_filesystem.cpp"
-            CMAKE_FLAGS -DCMAKE_CXX_STANDARD=17 -DCMAKE_CXX_STANDARD_REQUIRED=ON)
-    endif()
 endif()
 
 if(HAS_FILESYSTEM)
     message(STATUS "Compiler has filesystem support")
     set(HAS_FILESYSTEM 1)
 else()
-    if(HAS_EXPERIMENTAL_FILESYSTEM)
-        message(STATUS "Compiler has experimental filesystem support")
-        set(HAS_FILESYSTEM 0)
-    else()
-        message(FATAL_ERROR "Compiler is missing filesystem capabilities")
-    endif(HAS_EXPERIMENTAL_FILESYSTEM)
+    message(FATAL_ERROR "Compiler is missing filesystem capabilities")
 endif(HAS_FILESYSTEM)
 
 # configure a header file to pass some of the CMake settings
