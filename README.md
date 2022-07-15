@@ -39,23 +39,10 @@ Note also, that `CMake` will automatically use the environment variables `CFLAGS
 So far, this program has been tested and run successfully on Linux and Windows.
 
 ## How to build
-### Linux
-On most Linux machines with CMake installed, building will look something like this:
+### Linux or Windows
+On most Linux or Windows machines with CMake installed, building will look something like this:
 
-    mkdir build
-    cd build
-    cmake ..
-    make
+    cmake -S . -B build
+    cmake --build build
 
-The executable will then be in the `build/src/` directory and is named `autoproject`.
-
-### Windows
-Under Windows with MSVC++17 or better with CMake installed:
-
-    mkdir winbuild
-    cd winbuild
-    cmake ..
-    msbuild autoproject.sln
-
-The executable will then be in the `winbuild\src\Debug` directory and is named `autoproject`.
-
+The executable will then be in the `build/src/` (or `build/src/Debug/` for Windows) directory and is named `autoproject`.  Building under Windows with MSVC++ requires MSVC++17 or better.
