@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.15)
+cmake_minimum_required(VERSION 3.20)
 set(EXECUTABLE_NAME "autoproject")
 add_library(ConfigFile STATIC ConfigFile.cpp)
 target_include_directories(ConfigFile PRIVATE "${PROJECT_BINARY_DIR}")

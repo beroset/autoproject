@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.0)
+cmake_minimum_required(VERSION 3.20)
 configure_file(
     "com.beroset.autoproject.json"
     "com.beroset.autoproject.json"

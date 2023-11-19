@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.15)
+cmake_minimum_required(VERSION 3.20)
 add_executable(ConfigFileTest ConfigFileTest.cpp)
 target_include_directories(ConfigFileTest PRIVATE ${CMAKE_SOURCE_DIR}/src /usr/local/include)
 add_executable(AutoProjectTest AutoProjectTest.cpp)
