@@ -427,7 +427,7 @@ std::vector<Rule> loadrules(const fs::path &rulesfile) {
             try {
                 rules.emplace_back(pieces[1], pieces[2], pieces[3]);
             } 
-            catch (std::regex_error& e) {
+            catch (const std::regex_error& e) {
                 static constexpr std::string_view labels[4]{"line", "regex", "cmake lines", "libraries"};
                 std::cerr << "Error: " << e.what() << " in line " << linenum << " of rules file " << rulesfile << "\n";
                 for (unsigned i{0}; i < pieces.size(); ++i ) {

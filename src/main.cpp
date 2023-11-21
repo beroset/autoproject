@@ -164,7 +164,7 @@ int main(int argc, char *argv[]) {
     try {
         ap.open(argv[processed_args + 1], configuration.lang);
     }
-    catch(std::exception& e) {
+    catch(const std::exception& e) {
         std::cerr << "Error: " << e.what() << '\n';
         return 1;
     }
@@ -173,7 +173,7 @@ int main(int argc, char *argv[]) {
             std::cout << ap;   // print final status
         }
     }
-    catch(std::exception& e) {
+    catch(const std::exception& e) {
         std::cerr << "Error: " << e.what() << '\n';
         return 1;
     }
