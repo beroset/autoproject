@@ -1,53 +1,44 @@
 #include <iostream>
+#include <fstream>
 #include <iomanip>
 #include <string>
 #include <sstream>
-#include <stdexcept>
-#include <cppunit/TestRunner.h>
-#include <cppunit/extensions/HelperMacros.h>
-#include <cppunit/extensions/TestFactoryRegistry.h>
-#include <cppunit/ui/text/TestRunner.h>
-#include <cppunit/ui/text/TextTestRunner.h>
 #include "ConfigFile.h"
+#include <catch2/catch_test_macros.hpp>
 
-class ConfigFileTest : public CppUnit::TestFixture {
-    CPPUNIT_TEST_SUITE(ConfigFileTest);
-    CPPUNIT_TEST(streamInput);
-    CPPUNIT_TEST(streamOutput);
-    CPPUNIT_TEST(fileOutput);
-    CPPUNIT_TEST(fileInput);
-    CPPUNIT_TEST(rewriteTest);
-    CPPUNIT_TEST(setValue);
-    CPPUNIT_TEST(delete_key);
-    CPPUNIT_TEST(delete_last_key);
-    CPPUNIT_TEST(has_value);
-    CPPUNIT_TEST_SUITE_END();
-public:
-    void streamInput() {
+
+TEST_CASE("Configuration file can be opened, read, written, queried", "[configtest]") {
+    const std::string sample{"; This is a sample ini file\n"
+          "[protocol]\n"
+          "version = 6     \n"
+          "\n"
+          "[user]\n"
+          "name = Robert \"Bob\" Smith       \n"
+          "email = bob@smith.com \n"
+          "active = true\n"
+          "\t# this is also a comment\n"
+          "pi = 3.14159"};
+
+    SECTION("Can stream input") {
         std::stringstream ss(sample);
         ConfigFile cfg(ss);
         const std::string desired{"bob@smith.com"};
         auto answer = cfg.get_value("user", "email");
-        std::cout << "email = \"" << answer << "\", wanted \"" 
-            << desired << "\"\n";
-        CPPUNIT_ASSERT(answer == desired);
+        REQUIRE(answer == desired);
     }
 
-    void streamOutput() {
+    SECTION("Can stream output") {
         std::stringstream ss(sample);
         ConfigFile cfg{ss};
         // write it to another stream
         std::stringstream answer;
         answer << cfg;
         // read back in
-        std::cout << "answer.str() = \"" << answer.str() << "\"\n";
         ConfigFile desired{answer};
-        std::cout << "cfg = \"" << cfg << "\"\n";
-        std::cout << "desired = \"" << desired << "\"\n";
-        CPPUNIT_ASSERT(cfg == desired);
+        REQUIRE(cfg == desired);
     }
 
-    void fileInput() {
+    SECTION("Can read from named file") {
         std::string filename{"ConfigFileUnitTest_fileInput.conf"};
         std::ofstream out{filename};
         out << sample;
@@ -55,12 +46,11 @@ public:
         ConfigFile cfg(filename);
         const std::string desired{"bob@smith.com"};
         auto answer = cfg.get_value("user", "email");
-        std::cout << "email = \"" << answer << "\", wanted \"" 
-            << desired << "\"\n";
-        CPPUNIT_ASSERT(answer == desired);
+        REQUIRE(answer == desired);
     }
 
-    void fileOutput() {
+
+    SECTION("Can write to named file") {
         std::stringstream ss(sample);
         ConfigFile cfg{ss};
         std::string_view desired{R"([user]
@@ -72,10 +62,10 @@ public:
 	version = 6
 )"};
         std::ofstream cfgfile{"ConfigFileUnitTest.conf"};
-        cfgfile << cfg;
+        REQUIRE(cfgfile << cfg);
     }
 
-    void rewriteTest() {
+    SECTION("Can rewrite named file") {
         std::string filename{"ConfigFileUnitTest_rewriteTest.conf"};
         std::ofstream out{filename};
         out << sample;
@@ -96,72 +86,45 @@ public:
         std::stringstream answer;
         answer << rewritten.rdbuf();
 
-        CPPUNIT_ASSERT(answer.str() == desired);
+        REQUIRE(answer.str() == desired);
     }
 
-    void setValue() {
+    SECTION("Can set value") {
         std::stringstream ss(sample);
         ConfigFile cfg(ss);
         const std::string desired{"sargeant@non.com"};
         cfg.set_value("user", "email", desired);
         auto answer = cfg.get_value("user", "email");
-        std::cout << "Desired \"" << desired << "\"\n"
-            << "got \"" << answer << "\"\n";
-        CPPUNIT_ASSERT(answer == desired);
+        REQUIRE(answer == desired);
     }
 
-    void delete_key() {
+    SECTION("Can delete key") {
         std::stringstream ss(sample);
         ConfigFile cfg(ss);
-        CPPUNIT_ASSERT(cfg.has_section("protocol"));
+        REQUIRE(cfg.has_section("protocol"));
         cfg.set_value("protocol", "color", "green");
         cfg.delete_key("protocol", "version");
         std::string desired{""};
         auto answer = cfg.get_value("protocol", "version");
-        std::cout << "Desired \"" << desired << "\"\n"
-            << "got \"" << answer << "\"\n";
-        CPPUNIT_ASSERT(answer == desired);
-        CPPUNIT_ASSERT(cfg.has_section("protocol"));
+        REQUIRE(answer == desired);
+        REQUIRE(cfg.has_section("protocol"));
     }
 
-    void delete_last_key() {
+    SECTION("Deleting last key also deletes section") {
         std::stringstream ss(sample);
         ConfigFile cfg(ss);
-        CPPUNIT_ASSERT(cfg.has_section("protocol"));
+        REQUIRE(cfg.has_section("protocol"));
         cfg.delete_key("protocol", "version");
-        CPPUNIT_ASSERT(!cfg.has_section("protocol"));
+        REQUIRE(!cfg.has_section("protocol"));
     }
 
-    void has_value() {
+    SECTION("Has value works") {
         std::stringstream ss(sample);
         ConfigFile cfg(ss);
-        CPPUNIT_ASSERT(cfg.has_section("protocol"));
-        CPPUNIT_ASSERT(cfg.has_value("protocol", "version"));
+        REQUIRE(cfg.has_section("protocol"));
+        REQUIRE(cfg.has_value("protocol", "version"));
         cfg.delete_key("protocol", "version");
-        CPPUNIT_ASSERT(!cfg.has_section("protocol"));
-        CPPUNIT_ASSERT(!cfg.has_value("protocol", "version"));
+        REQUIRE(!cfg.has_section("protocol"));
+        REQUIRE(!cfg.has_value("protocol", "version"));
     }
-
-private:
-    const std::string sample{"; This is a sample ini file\n"
-          "[protocol]\n"
-          "version = 6     \n"
-          "\n"
-          "[user]\n"
-          "name = Robert \"Bob\" Smith       \n"
-          "email = bob@smith.com \n"
-          "active = true\n"
-          "\t# this is also a comment\n"
-          "pi = 3.14159"};
-};
-
-CPPUNIT_TEST_SUITE_REGISTRATION(ConfigFileTest);
-
-int main() {
-    CppUnit::TextUi::TestRunner runner;
-    CppUnit::TestFactoryRegistry &registry = CppUnit::TestFactoryRegistry::getRegistry();
-    runner.addTest( registry.makeTest() );
-    bool wasSuccessful = runner.run();
-    std::cout << "wasSuccessful = " << std::boolalpha << wasSuccessful << '\n';
-    return !wasSuccessful;
 }
