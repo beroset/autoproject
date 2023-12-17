@@ -41,7 +41,6 @@ static std::vector<Rule> loadrules(const fs::path& rulesfile);
 
 // local constants
 static const std::string mdextension{".md"};
-static constexpr std::string_view cmakeVersion{"VERSION 3.1"};
 static constexpr unsigned indentLevel{4};
 static constexpr unsigned delimLength{3};
 const std::regex Rule::newline{R"(\\n)"};
@@ -305,17 +304,14 @@ bool isSourceExtension(const std::string_view ext) {
 }
 
 std::string& trim(std::string& str, const std::string_view pattern) {
-    // TODO: when we get C++20, use std::string::starts_with()
-    if (str.find(pattern) == 0) {
+    if (str.starts_with(pattern)) {
         str.erase(0, pattern.size());
     }
     return str;
 }
 
 std::string& rtrim(std::string& str, const std::string_view pattern) {
-    // TODO: when we get C++20, use std::string::ends_with()
-    auto loc{str.rfind(pattern)};
-    if (loc != std::string::npos && loc == str.size() - pattern.size()) {
+    if (str.ends_with(pattern)) {
         str.erase(str.size() - pattern.size(), pattern.size());
     }
     return str;
