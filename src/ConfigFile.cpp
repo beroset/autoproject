@@ -9,7 +9,6 @@
 #include <unordered_map>
 #include <filesystem>
 
-namespace fs = std::filesystem;
 
 // helper functions
 static std::string tolower(std::string str) {
@@ -102,8 +101,8 @@ bool ConfigFile::rewrite(const std::string& filename) const {
             alt.delete_key(current_section, item.first);
         }
     }
-    fs::remove(filename);
-    fs::rename(filename + suffix, filename);
+    std::filesystem::remove(filename);
+    std::filesystem::rename(filename + suffix, filename);
     return true;
 }
 
@@ -156,6 +155,7 @@ void ConfigFile::delete_section(const std::string& sectionname) {
         map.erase(sect);
     }
 }
+
 bool ConfigFile::operator==(const ConfigFile& other) const {
     return map == other.map;
 }
