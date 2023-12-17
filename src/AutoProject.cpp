@@ -309,17 +309,13 @@ std::string trimExtras(std::string& line) {
         return line;
     }
     // remove header markup
-    trim(line, '#');
-    rtrim(line, '#');
+    doubletrim(line, '#');
     // remove bold or italic
-    trim(line, '*');
-    rtrim(line, '*');
+    doubletrim(line, '*');
     // remove html bold
-    trim(line, "<b>");
-    rtrim(line, "</b>");
+    doubletrim(line, "<b>", "</b>");
     // remove quotes
-    trim(line, '"');
-    rtrim(line, '"');
+    doubletrim(line, '"');
     // remove trailing - or :
     rtrim(line, '-');
     rtrim(line, ':');
