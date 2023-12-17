@@ -6,7 +6,7 @@ TEST_CASE( "Trim characters and substrings", "[trim]" ) {
     SECTION("Can trim using string") {
         std::string title{"## This is a title"};
         const std::string desired{"This is a title"};
-        auto answer = trim(title, "## ");
+        auto answer = trim(title, "##");
         REQUIRE(answer == desired);
     }
 
@@ -26,7 +26,7 @@ TEST_CASE( "Trim characters and substrings", "[trim]" ) {
 
     SECTION("Can rtrim using string") {
         std::string title{"## This is a title ##"};
-        const std::string desired{"## This is a title "}; 
+        const std::string desired{"## This is a title"}; 
         auto answer = rtrim(title, "##");
         REQUIRE(answer == desired);
     }
@@ -42,6 +42,27 @@ TEST_CASE( "Trim characters and substrings", "[trim]" ) {
         std::string title{"## This is a title ##  "};
         const std::string desired{"## This is a title"};
         auto answer = rtrim(title, '#');
+        REQUIRE(answer == desired);
+    }
+
+    SECTION("Can double trim including leading and trailing spaces using character") {
+        std::string title{"   ## This is a title  ##  "};
+        const std::string desired{"This is a title"};
+        auto answer = doubletrim(title, '#');
+        REQUIRE(answer == desired);
+    }
+
+    SECTION("Can double trim using string") {
+        std::string title{"<b> This is a title  </b>"};
+        const std::string desired{"This is a title"};
+        auto answer = doubletrim(title, "<b>", "</b>");
+        REQUIRE(answer == desired);
+    }
+
+    SECTION("Can double trim including leading and trailing spaces using character") {
+        std::string title{"   <b> This is a title  </b>  "};
+        const std::string desired{"This is a title"};
+        auto answer = doubletrim(title, "<b>", "</b>");
         REQUIRE(answer == desired);
     }
 
