@@ -3,7 +3,7 @@ if (POLICY CMP0048)
   cmake_policy(SET CMP0048 NEW)
 endif (POLICY CMP0048)
 
-project(autoproject VERSION 2.3.1)
+project(autoproject VERSION 2.3.2)
 set(CPACK_RESOURCE_FILE_LICENSE "${CMAKE_CURRENT_SOURCE_DIR}/LICENSE")
 set(CPACK_PACKAGE_VENDOR "beroset")
 set(CPACK_SOURCE_IGNORE_FILES "/build/;/*.swp;.git*")
