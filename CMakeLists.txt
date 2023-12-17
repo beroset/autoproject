@@ -18,24 +18,6 @@ option(WITH_TEST "Build the test suite" OFF)
 # options on-by-default that you can disable
 option(BUILD_DOCS "Build the documentation" ON)
 
-if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
-    try_compile(HAS_FILESYSTEM "${CMAKE_BINARY_DIR}/temp" 
-        "${CMAKE_SOURCE_DIR}/compilertests/has_filesystem.cpp" 
-        CMAKE_FLAGS -DCMAKE_CXX_STANDARD=17 -DCMAKE_CXX_STANDARD_REQUIRED=ON
-        LINK_LIBRARIES stdc++fs)
-else()
-    try_compile(HAS_FILESYSTEM "${CMAKE_BINARY_DIR}/temp" 
-        "${CMAKE_SOURCE_DIR}/compilertests/has_filesystem.cpp"
-        CMAKE_FLAGS -DCMAKE_CXX_STANDARD=17 -DCMAKE_CXX_STANDARD_REQUIRED=ON)
-endif()
-
-if(HAS_FILESYSTEM)
-    message(STATUS "Compiler has filesystem support")
-    set(HAS_FILESYSTEM 1)
-else()
-    message(FATAL_ERROR "Compiler is missing filesystem capabilities")
-endif(HAS_FILESYSTEM)
-
 # configure a header file to pass some of the CMake settings
 # to the source code
 configure_file (
