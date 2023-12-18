@@ -4,7 +4,14 @@
 #include <string>
 #include <sstream>
 #include "ConfigFile.h"
-#include <catch2/catch_test_macros.hpp>
+#if USE_CATCH2_VERSION == 2
+#  define CATCH_CONFIG_MAIN
+#  include <catch2/catch.hpp>
+#elif USE_CATCH2_VERSION == 3
+#  include <catch2/catch_test_macros.hpp>
+#else
+#  error "Catch2 version unknown"
+#endif
 
 
 TEST_CASE("Configuration file can be opened, read, written, queried", "[configtest]") {

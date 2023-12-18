@@ -15,21 +15,19 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: [macos-latest, windows-latest, ubuntu-latest]
+        os: [macos-latest, ubuntu-latest]
 
     steps:
     - uses: actions/checkout@v2
 
-    - name: Install cppunit
+    - name: Install catch2
       run: |
         if [ "$RUNNER_OS" == "Linux" ]; then
           sudo apt-get update
-          sudo apt-get install libcppunit-dev
-        elif [ "$RUNNER_OS" == "Windows" ]; then
-          echo "Windows does not support cppunit testing"
+          sudo apt-get install catch2
         elif [ "$RUNNER_OS" == "macOS" ]; then
           brew update
-          brew install cppunit
+          brew install catch2
         else 
           echo "$RUNNER_OS is not supported"
           exit 1
@@ -50,9 +48,7 @@ jobs:
       # and build directories, but this is only available with CMake 3.13 and higher.  
       # The CMake binaries on the Github Actions machines are (as of this writing) 3.12
       run: |
-        if [ "$RUNNER_OS" == "Windows" ]; then
-          cmake $GITHUB_WORKSPACE -DCMAKE_BUILD_TYPE=$BUILD_TYPE -DWITH_TEST=OFF
-        elif [ "$RUNNER_OS" == "macOS" ]; then
+        if [ "$RUNNER_OS" == "macOS" ]; then
           cmake $GITHUB_WORKSPACE -DCMAKE_BUILD_TYPE=$BUILD_TYPE -DWITH_TEST=ON
         else
           cmake $GITHUB_WORKSPACE -DCMAKE_BUILD_TYPE=$BUILD_TYPE -DWITH_TEST=ON

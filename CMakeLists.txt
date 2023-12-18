@@ -36,7 +36,7 @@ add_subdirectory(config)
 add_subdirectory(autodownload)
 
 if (WITH_TEST)
-    find_package(Catch2 3 REQUIRED)
+    find_package(Catch2 REQUIRED)
     enable_testing()
     add_subdirectory(test)
 endif() 
