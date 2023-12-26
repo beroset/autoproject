@@ -265,7 +265,7 @@ void AutoProject::checkRules(const std::string &line) {
 void AutoProject::checkLanguageTags(const std::string& line) {
     if (!thislang.empty()) 
         return;
-    static const std::regex tagcpp{"### tags: \\[.*'c\\+\\+'.*\\]"}; 
+    static const std::regex tagcpp{"### tags: \\[.*'c\\+\\+.*\\]"}; 
     static const std::regex tagc{"### tags: \\[.*'c'.*\\]"}; 
     static const std::regex tagasm{"### tags: \\[.*'assembly'.*\\]"}; 
     std::smatch pieces;
