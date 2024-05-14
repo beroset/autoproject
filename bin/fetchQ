@@ -20,7 +20,7 @@ from subprocess import run
 
 
 def make_URL(qnumber):
-    return 'https://api.stackexchange.com/2.2/questions/' + \
+    return 'https://api.stackexchange.com/2.3/questions/' + \
         str(qnumber) + \
         '/?order=desc&sort=activity&site=codereview' + \
         '&filter=!)5IYc5cM9scVj-ftqnOnMD(3TmXe' + \
@@ -28,9 +28,7 @@ def make_URL(qnumber):
 
 
 def fetch_compressed_data(url):
-    compressed = urllib.request.urlopen(url).read()
-    stream = io.BytesIO(compressed)
-    return gzip.GzipFile(fileobj=stream).read()
+    return urllib.request.urlopen(url).read()
 
 
 def fetch_question_markdown(qnumber):
